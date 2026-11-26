@@ -293,7 +293,6 @@ export default function TaskPage() {
         }
 
         cachedV = assignment.variant;
-        if (savedRun?.variant === 'severity_only' || savedRun?.variant === 'spatial_impact') cachedV = savedRun.variant;
         resolvedConfig = assignment.remoteConfig ?? null;
         if (cachedV === null) {
           setVariant('severity_only');

@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
+import type { Flags } from '@flagsmith/nodejs';
 import fs from 'fs';
 import path from 'path';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { evaluateSubmission } from '@/lib/benchmark/evaluator';
 import { SCENARIO_ID } from '@/lib/experiment/identity';
-import { trackServerEvent } from '@/lib/flagsmith/server';
+import { getFlagsmithServer, isExperimentVariant, STRATEGY_FLAG_NAME, trackServerEvent } from '@/lib/flagsmith/server';
 import { METRIC_NAMES } from '@/lib/flagsmith/metrics';
 import { validateRemoteConfig } from '@/lib/flagsmith/config-schema';
 import { verifyModelConfigSignature } from '@/lib/flagsmith/model-config-signature';
@@ -114,7 +115,35 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No active participant session. Start the task before submitting.' }, { status: 403 });
     }
 
-    const scoringConfigResult = validateRemoteConfig(body.model_config, session.variant);
+    const flagsmith = await getFlagsmithServer();
+    if (!flagsmith) {
+      return NextResponse.json({ error: 'Flagsmith assignment service is unavailable.' }, { status: 503 });
+    }
+
+    let identityFlags: Flags;
+    try {
+      identityFlags = await flagsmith.getIdentityFlags(participant_id);
+    } catch (error) {
+      console.error('[Submissions] Flagsmith identity evaluation failed:', error);
+      return NextResponse.json({ error: 'Flagsmith could not verify the stored session assignment.' }, { status: 503 });
+    }
+
+    const strategyFlag = identityFlags.flags[STRATEGY_FLAG_NAME];
+    const assignedVariant = strategyFlag?.value;
+    if (
+      !strategyFlag ||
+      strategyFlag.isDefault ||
+      !strategyFlag.enabled ||
+      !strategyFlag.experiment?.inExperiment ||
+      !isExperimentVariant(assignedVariant)
+    ) {
+      return NextResponse.json({ error: 'Participant has no valid Flagsmith experiment assignment.' }, { status: 403 });
+    }
+    if (session.variant !== assignedVariant) {
+      return NextResponse.json({ error: 'Stored session variant does not match the Flagsmith assignment.' }, { status: 409 });
+    }
+
+    const scoringConfigResult = validateRemoteConfig(body.model_config, assignedVariant);
     if (!scoringConfigResult.valid || !scoringConfigResult.config ||
         !verifyModelConfigSignature(participant_id, session.started_at, scoringConfigResult.config, String(body.model_config_signature || ''))) {
       return NextResponse.json({ error: 'Run config signature is missing or invalid. Resume from the same participant session.' }, { status: 403 });
