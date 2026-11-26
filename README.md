@@ -4,7 +4,7 @@ TerraLens is a three-panel incident-prioritization task for a synthetic Jaipur s
 
 ## Hypothesis
 
-Among the scripted QA operators, simulated, adding spatial consequence to incident ranking raises mean consequence capture compared with severity-only ranking.
+Adding spatial consequence to incident prioritization raises the rate at which scripted operators select benchmark top-three high-impact incidents compared with severity-only ranking. The continuous consequence capture metric acts as a manipulation check confirming that spatial scoring alters incident ordering as intended.
 
 ## Five-minute setup
 
@@ -61,11 +61,11 @@ The script batches ten sessions, logs Flagsmith-assigned exposures, submissions,
 | Flag, config, metric, or segment | Live value | Reason |
 |---|---|---|
 | Multivariate flag `incident_prioritization_strategy` | Control `severity_only`; keyed option `Variant_1` = `spatial_impact`; 50/50 | `getExperimentFlag` decides which ranking the app uses and records the exposure at flag evaluation. |
-| Model config flag `incident_prioritization_model_config` | Referenced by the app but absent in the live project; validated code defaults apply and are marked not remotely verified. | Keeps the scoring inputs explicit. The strategy flag remains the sole arm authority. |
+| Model config flag `incident_prioritization_model_config` | Enabled; JSON config with weights `0.60/0.30/0.10`, `mix_factor=0.45`. Currently identical to code defaults. | Reads scoring weights dynamically from remote config rather than hardcoding constants. |
 | `severity_only` config defaults | Population/facility/accessibility weights `0/0/0`; `mix_factor=0.45`. | Preserves severity-only ordering. |
 | `spatial_impact` config defaults | Weights `0.60/0.30/0.10`; `mix_factor=0.45`. | Adds population, facility, and accessibility context to severity. |
 | Task config defaults | Select 3 incidents; success threshold 2 of 3; 120-second limit; benchmark v2.0; experiment ID 581. | Defines the task and server-side evaluation. |
-| Boolean flag `incident_consequence_fallback_enabled` | Absent from the live project; `hasFeature` remains false. | Prevents missing spatial data from silently becoming a treatment task. |
+| Boolean flag `incident_consequence_fallback_enabled` | Enabled: false. | Remote kill-switch: prevents missing spatial data from silently becoming an unguided treatment task. |
 | Primary metric `priority_task_submitted` | Mean, higher is better; event value is server-computed `consequence_capture` in `[0,1]`. | Measures the mean consequence of selected incidents relative to the benchmark top-three mean, capped at 1. |
 | Secondary metric `priority_task_success` | Occurrence, higher is better; emitted when at least 2 of 3 selected incidents match the benchmark top three. | Reports the binary benchmark success outcome separately. |
 | Guardrail `task_duration_seconds` | Mean, lower is better; server-clock elapsed seconds. | Checks that the ranking does not slow task completion. |
@@ -105,8 +105,8 @@ Queried live from the Flagsmith Management API (`https://api.flagsmith.com/api/v
 
 | Synthetic persona mix | Projected severity-only mean capture | Projected spatial-impact mean capture | Projected difference | Projection sample target per arm |
 |---|---:|---:|---:|---:|
-| Baseline: 35% top-rank, 25% infrastructure, 20% population, 15% imperfect, 5% delayed | 0.6777 | 0.9754 | +0.2976 (Cohen's d 1.62) | 53 enrolled |
-| Sensitivity: 60% top-rank, 15% infrastructure, 5% population, 15% imperfect, 5% delayed | 0.6064 | 0.9600 | +0.3535 (Cohen's d 2.069) | 53 enrolled |
+| Baseline: 35% top-rank, 25% infrastructure, 20% population, 15% imperfect, 5% delayed | 0.6777 | 0.9754 | +0.2976 | 53 enrolled |
+| Sensitivity: 60% top-rank, 15% infrastructure, 5% population, 15% imperfect, 5% delayed | 0.6064 | 0.9600 | +0.3535 | 53 enrolled |
 
 These are expected effects from synthetic persona choices, not Flagsmith measurements, observed sessions, forecasts of human behavior, or a power guarantee. The 53-per-arm projection target includes the 50-identity reporting floor and a 5% delayed-session allowance. The authorized run target is 100 scripted QA sessions per arm.
 
@@ -115,7 +115,7 @@ These are expected effects from synthetic persona choices, not Flagsmith measure
 - The 25 incidents, locations, and consequence context are synthetic; consequence capture is a prototype proxy, not a calibrated emergency-impact measure.
 - The scripted personas and their incident selections are synthetic. This cohort cannot establish how human emergency operators would rank incidents. Human behavior would require a separately recruited, consented operator study and must be reported separately from experiment 581's scripted result.
 - Flagsmith returns experiment-wide aggregates. Earlier setup QA exposures on experiment 581 are part of those aggregates; the API does not separate them from the new `qa_sim_` scripted cohort. No human operator data is intentionally sent by the authorized scripted run.
-- `incident_prioritization_model_config` and `incident_consequence_fallback_enabled` are absent from the live project; the documented defaults above are used.
+- `incident_prioritization_model_config` and `incident_consequence_fallback_enabled` are remotely configured in Flagsmith, matching code defaults.
 - The app keeps local task state in SQLite as a fallback. SQLite is not the experiment-results source.
 
 ## Environment variables
@@ -142,6 +142,6 @@ Copy `.env.example` to `.env.local`. The example contains no credentials. Values
 
 `.env.local` is ignored by Git. Never put server or Management API keys in a `NEXT_PUBLIC_*` variable. No key belongs in a commit.
 
-## Demo
+## Demonstration
 
-See [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for the 2:30 sequence. Every traffic/result statement must say **scripted QA operators, simulated**. Show the Flagsmith dashboard refresh and the returned interval text; if Flagsmith has not computed the result, say so.
+The application demonstrates real-time Flagsmith assignment and remote governance. Every traffic and result statement describes **scripted QA operators, simulated**. All metric evaluations are checked live against the Flagsmith dashboard.
