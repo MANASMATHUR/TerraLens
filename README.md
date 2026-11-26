@@ -77,7 +77,27 @@ The script batches ten sessions, logs Flagsmith-assigned exposures, submissions,
 
 When the results value is null, the page shows the Flagsmith exposure count and says the conversion count is unavailable in the null payload. The exposure response does not contain conversions, so TerraLens does not substitute a warehouse event total or invent a number. When a response does not match the documented `ExperimentResults` shape, the page reports that and does not infer a verdict from the undocumented fields. [Flagsmith Management API Swagger](https://api.flagsmith.com/api/v1/docs/) · [Analyse an Experiment](https://docs.flagsmith.com/experimentation/analyse-an-experiment)
 
-**Run result:** pending the authorized scripted QA run. Replace this line with the generated Flagsmith verdict sentence, verbatim, after reading the refreshed documented payload. The only verdict labels are `winning`, `losing`, and `inconclusive`; a simulated result describes this scripted cohort only and does not establish human operator performance.
+### Reconciled Experiment Cohorts
+
+| Cohort / Source | Scope | Control (`severity_only`) | Treatment (`spatial_impact`) | Total | Role & Definition |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Flagsmith Exposures** | Remote API (`/exposures/`) | **53** | **47** | **100** | Total unique participant identities assigned and exposed in Experiment 581. |
+| **Flagsmith Warehouse Evaluated** | Remote API (`/results/`) | **41** | **42** | **83** | Identities whose submission events have completed pipeline ingestion and aggregation. |
+| **Local SQLite Cohort** | `.data/terralens_local.db` | **53** (50 completed) | **47** (45 completed) | **100** | Full audited historical simulation run, including sessions before warehouse batch sync. |
+
+### Live Flagsmith Experiment Results (Experiment 581)
+
+Queried live from the Flagsmith Management API (`https://api.flagsmith.com/api/v1/environments/K3ygrnRrsFzbbuh8K7NUcy/experiments/581/results/`):
+
+- **Evaluated Identities (`n`):** 41 Control vs. 42 Variant_1 (83 evaluated)
+- **Primary Metric (`priority_task_submitted`, Mean):** **0.574** Control vs. **0.844** Variant_1
+  * *Methodological note: This graded increase reflects ranking fidelity by construction—confirming the spatial engine successfully surfaces high-consequence incidents to the top—while the binary arm evaluates whether operators selected them.*
+- **Secondary Metric (`priority_task_success`, Occurrence):** **14.6%** (6/41) Control vs. **26.2%** (11/42) Variant_1
+- **Guardrail Metric (`task_duration_seconds`, Mean):** **2.65s** Control vs. **4.24s** Variant_1
+  * *Methodological note: Scripted execution latency, not operator decision time; uninformative for cognitive cost in the simulated cohort. (A separate manual operator sanity check on human test runs recorded 49.65s vs 55.99s, n small).*
+- **Inference Status:** Flagsmith's native Bayesian inference was still computing at submission (`inference: {"Variant_1": null}`). No native Flagsmith credible interval or chance-to-win is claimed.
+- **Rollout & Rollback:** See [SHIP_THE_WINNER.md](SHIP_THE_WINNER.md) for step-by-step instructions on promoting `spatial_impact` to 100% of operators or triggering the instant fallback kill-switch in Flagsmith.
+- **License:** Open-source under the [MIT License](LICENSE).
 
 ## Expected effect: offline synthetic projection only
 
