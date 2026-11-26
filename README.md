@@ -98,7 +98,7 @@ Queried live from the Flagsmith Management API (`https://api.flagsmith.com/api/v
   * *Methodological note: This graded increase reflects ranking fidelity by construction—confirming the spatial engine successfully surfaces high-consequence incidents to the top—while the binary arm evaluates whether operators selected them.*
 - **Secondary Metric (`priority_task_success`, Occurrence):** **14.6%** (6/41) Control vs. **26.2%** (11/42) Variant_1
 - **Guardrail Metric (`task_duration_seconds`, Mean):** **2.65s** Control vs. **4.24s** Variant_1
-  * *Methodological note: Scripted execution latency, not operator decision time; uninformative for cognitive cost in the simulated cohort. (A separate manual operator sanity check on human test runs recorded 49.65s vs 55.99s, n small).*
+  * *Methodological note: Scripted execution latency, not operator decision time; uninformative for cognitive cost in the simulated cohort. (A separate sanity check from one developer's manual test runs recorded 49.65s vs 55.99s, n small, not a human operator cohort).*
 - **Inference Status:** Flagsmith's native Bayesian inference was still computing at submission (`inference: {"Variant_1": null}`). No native Flagsmith credible interval or chance-to-win is claimed.
 - **Rollout & Rollback:** See [SHIP_THE_WINNER.md](SHIP_THE_WINNER.md) for step-by-step instructions on promoting `spatial_impact` to 100% of operators or triggering the instant fallback kill-switch in Flagsmith.
 - **License:** Open-source under the [MIT License](LICENSE).
