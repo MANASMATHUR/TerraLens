@@ -14,6 +14,38 @@ export const dynamic = 'force-dynamic';
 
 type ConsequenceCapture = number;
 
+type ConsequenceIncident = {
+  id: number;
+  context?: {
+    composite_c?: number;
+    population_index?: number;
+    facility_index?: number;
+    accessibility_index?: number;
+    population_exposed?: number;
+    hospital_count?: number;
+    fire_station_count?: number;
+  };
+};
+
+function computeConsequenceCapture(
+  selectedIds: number[],
+  benchmarkTop3Ids: number[],
+  incidents: ConsequenceIncident[],
+): ConsequenceCapture {
+  const consequence = (incident: ConsequenceIncident | undefined) => {
+    const context = incident?.context;
+    if (!context) return 0;
+    if (typeof context.composite_c === 'number') return Math.max(0, Math.min(1, context.composite_c));
+    const population = Number(context.population_index) || 0;
+    const facilities = Number(context.facility_index) || 0;
+    const accessibility = Number(context.accessibility_index) || 0;
+    return Math.max(0, Math.min(1, 0.6 * population + 0.3 * facilities + 0.1 * accessibility));
+  };
+  const pickedMean = selectedIds.reduce((sum, id) => sum + consequence(incidents.find((incident) => incident.id === id)), 0) / 3;
+  const benchmarkMean = benchmarkTop3Ids.reduce((sum, id) => sum + consequence(incidents.find((incident) => incident.id === id)), 0) / 3;
+  return benchmarkMean > 0 ? Math.max(0, Math.min(1, pickedMean / benchmarkMean)) : 0;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -107,23 +139,12 @@ export async function POST(req: Request) {
     let totalEstimatedPopExposure = 0;
     let totalHospsCovered = 0;
     let totalFireCovered = 0;
-    let consequenceCapture = 0;
+    let consequenceCapture: ConsequenceCapture = 0;
     if (fs.existsSync(incidentsPath)) {
-      const allIncidents = JSON.parse(fs.readFileSync(incidentsPath, 'utf8'));
-      const consequence = (incident: any) => {
-        const context = incident?.context;
-        if (!context) return 0;
-        if (typeof context.composite_c === 'number') return Math.max(0, Math.min(1, context.composite_c));
-        const p = Number(context.population_index) || 0;
-        const f = Number(context.facility_index) || 0;
-        const a = Number(context.accessibility_index) || 0;
-        return Math.max(0, Math.min(1, 0.6 * p + 0.3 * f + 0.1 * a));
-      };
-      const pickedMean = uniqueIds.reduce((sum, id) => sum + consequence(allIncidents.find((i: any) => i.id === id)), 0) / 3;
-      const benchmarkMean = benchmarkTop3Ids.reduce((sum, id) => sum + consequence(allIncidents.find((i: any) => i.id === id)), 0) / 3;
-      consequenceCapture = benchmarkMean > 0 ? Math.max(0, Math.min(1, pickedMean / benchmarkMean)) : 0;
+      const allIncidents = JSON.parse(fs.readFileSync(incidentsPath, 'utf8')) as ConsequenceIncident[];
+      consequenceCapture = computeConsequenceCapture(uniqueIds, benchmarkTop3Ids, allIncidents);
       uniqueIds.forEach((id: number) => {
-        const found = allIncidents.find((i: any) => i.id === id);
+        const found = allIncidents.find((incident) => incident.id === id);
         if (found?.context) {
           totalEstimatedPopExposure += found.context.population_exposed || 0;
           totalHospsCovered += found.context.hospital_count || 0;
@@ -194,6 +215,7 @@ export async function POST(req: Request) {
       within_standard_deadline: within120Limit,
       selected_ids: uniqueIds,
       consequence_metrics: {
+        consequence_capture: consequenceCapture,
         population_protected: totalEstimatedPopExposure,
         estimated_population_exposure: totalEstimatedPopExposure,
         hospitals_covered: totalHospsCovered,
