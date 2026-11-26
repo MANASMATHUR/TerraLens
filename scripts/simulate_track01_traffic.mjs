@@ -87,8 +87,9 @@ function simulateParticipantPicks(rankedList, persona) {
   let candidatePool = [];
 
   if (persona === 'top_ranked_bias') {
-    // Looks predominantly at the top 6 items in their view
-    candidatePool = rankedList.slice(0, 6);
+    // Sampling window includes severity-ranked benchmark targets at ranks 6, 8, and 10.
+    // A top-rank operator can therefore sometimes succeed in severity_only.
+    candidatePool = rankedList.slice(0, 12);
   } else if (persona === 'critical_infrastructure') {
     // Looks for incidents with high facility index among top 12
     const top12 = rankedList.slice(0, 12);
