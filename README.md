@@ -1,6 +1,10 @@
 # TerraLens
 
-TerraLens is a three-panel incident-prioritization task for a synthetic Jaipur scenario. Flagsmith assigns one of two ranking strategies and receives exposure and outcome events; `/analytics` reads results only from the Flagsmith Management API.
+> **WeMakeDevs × Flagsmith Toggle Wars — Track 01: Test Something Real ($2,000)**  
+> **Pitch:** Spatial decision intelligence for emergency municipal operations—Flagsmith controls the incident prioritization algorithm, remote scoring weights, and telemetry pipeline.  
+> **Demo Walkthrough Video:** [Coming Soon / Final Recording]  
+
+TerraLens is a three-panel incident-prioritization GIS workspace for a synthetic Jaipur scenario. Flagsmith assigns one of two ranking strategies and receives exposure and outcome events; `/analytics` reads results directly from the Flagsmith Management API.
 
 ## Hypothesis
 
