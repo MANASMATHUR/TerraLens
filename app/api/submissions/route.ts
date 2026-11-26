@@ -207,6 +207,13 @@ export async function POST(req: Request) {
         fire_stations_covered: number;
         critical_infra_coverage_score: number;
       };
+      flagsmith_events: {
+        submitted: boolean;
+        success: boolean;
+        duration: boolean;
+        last_event: string;
+        last_value: number;
+      };
     } = {
       success: evalResult.successful,
       matches: evalResult.matches,
