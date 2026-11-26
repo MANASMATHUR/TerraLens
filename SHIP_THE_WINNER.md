@@ -1,23 +1,23 @@
 # Ship the experiment result
 
-TerraLens does not declare a winner from SQLite or simulated traffic. Use the Flagsmith experiment result and verify split health before changing the flag. The live experiment is TerraLens project `55892`, Development environment, experiment `581`.
+These steps apply to TerraLens project `55892`, Development environment, experiment `581`. The result describes **scripted QA operators, simulated**. It does not validate human emergency dispatch behavior, so keep any flag change in Development until a separate real-human study supports an operational decision.
 
-## If one variation wins
+## When Flagsmith reports a conclusive winner
 
-1. In Flagsmith, open the TerraLens project, the experiment environment, and the `incident_prioritization_strategy` experiment.
-2. Refresh results. Do not refresh more than once every five minutes.
-3. Confirm the result is conclusive and the sample-ratio-mismatch health check is clear. Record the native metric values and the `statistics.lift` text exactly as Flagsmith reports it. Do not calculate a separate interval in TerraLens.
-4. Select **End Experiment**. Flagsmith freezes the result and unlocks the flag.
-5. Open the `incident_prioritization_strategy` feature flag in the same environment.
-6. Set the flag’s default value to the winning variation (`severity_only` or `spatial_impact`) and its allocation to 100%. Save and publish the flag change.
-7. Open `/task` in a fresh browser profile and confirm the rendered variant matches the chosen winner. Open `/flags/health` and confirm Flagsmith answered.
+1. Open **Flagsmith → TerraLens → Development → Experiments → TerraLens: Spatial Impact vs Severity (581)**.
+2. Refresh the experiment results. Respect Flagsmith's refresh limit; do not request a refresh more than once every five minutes.
+3. Confirm `/analytics` and the experiment page show the same documented result, the 50/50 assignment, and no unresolved Flagsmith sample-size warning. Read the `statistics.lift` text verbatim. TerraLens does not calculate another interval.
+4. Select **End Experiment** on the experiment page and confirm. This freezes the experiment and unlocks the flag.
+5. Open **Environments → Development → Features → `incident_prioritization_strategy`**.
+6. In the flag's Value settings, set the value to the winner reported by Flagsmith: `spatial_impact` if that arm won, or `severity_only` if Control won. Save the feature value. With the experiment ended, that default value is served to the Development audience.
+7. Open `/task` in a fresh browser session and confirm Flagsmith returns the selected value. Check `/flags/health` for a successful flag response.
 
 ## If the result is inconclusive
 
-1. Open the same experiment and inspect the result and split-health warning.
-2. Select **End Experiment** to freeze the inconclusive result and unlock the flag.
-3. Open the same `incident_prioritization_strategy` feature flag.
-4. Set its default value to `severity_only` and its allocation to 100%. Save and publish. This leaves the operator queue on the established control while the team decides whether to collect more evidence or stop the test.
-5. Do not describe either variation as a winner. Report `inconclusive`. If Flagsmith returns `results: null`, show the exposure counts and say no result or interval has been computed.
+1. Refresh experiment 581 in the Flagsmith dashboard and read the reported `sample_size_warning` and `statistics.lift` text.
+2. Select **End Experiment** and confirm to unlock the flag.
+3. Open **Environments → Development → Features → `incident_prioritization_strategy`**.
+4. In Value settings, set the value to `severity_only` and save. The Development audience stays on the control arm while the team decides whether to gather more evidence.
+5. Keep the verdict `inconclusive`. If the results value is null, report the Flagsmith exposure count and say the conversion count and interval are not available in that payload. Do not extend the run beyond the authorized 100 scripted QA sessions per arm.
 
-Flagsmith can show “Collecting data” while an arm has fewer than 50 identities (or fewer than five conversions for an occurrence metric). Follow the live experiment page’s state rather than extrapolating from the simulator.
+Flagsmith's Management API and dashboard are the experiment-result source. Do not use SQLite, simulator logs, or offline projections as experiment results. See [Run an Experiment](https://docs.flagsmith.com/experimentation/run-an-experiment) and [Analyse an Experiment](https://docs.flagsmith.com/experimentation/analyse-an-experiment).

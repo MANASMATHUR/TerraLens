@@ -1,0 +1,680 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 1,
+        "title": "SMS Trauma Corridor 48-inch Water Main Rupture",
+        "incident_type": "water_main_burst",
+        "severity_score": 78.0,
+        "impact_radius_m": 950,
+        "duration_hours": 18.0,
+        "neighborhood": "C-Scheme / SMS",
+        "population_exposed": 38000,
+        "hospital_count": 1,
+        "fire_station_count": 0,
+        "school_count": 2,
+        "rank_a": 12,
+        "score_a": 78.0,
+        "rank_b": 5,
+        "score_b": 71.42
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.7895,
+          26.911
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 2,
+        "title": "Ashok Nagar Underground Gas Distribution Leak",
+        "incident_type": "gas_leak",
+        "severity_score": 82.0,
+        "impact_radius_m": 1100,
+        "duration_hours": 14.0,
+        "neighborhood": "C-Scheme",
+        "population_exposed": 38000,
+        "hospital_count": 1,
+        "fire_station_count": 0,
+        "school_count": 1,
+        "rank_a": 8,
+        "score_a": 82.0,
+        "rank_b": 3,
+        "score_b": 72.34
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.794,
+          26.9065
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 3,
+        "title": "Sawai Ram Singh Road Substation Explosion",
+        "incident_type": "transformer_fire",
+        "severity_score": 84.0,
+        "impact_radius_m": 1200,
+        "duration_hours": 16.0,
+        "neighborhood": "Ram Niwas Bagh",
+        "population_exposed": 38000,
+        "hospital_count": 0,
+        "fire_station_count": 0,
+        "school_count": 0,
+        "rank_a": 6,
+        "score_a": 84.0,
+        "rank_b": 4,
+        "score_b": 71.76
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.816,
+          26.9135
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 4,
+        "title": "Sitapura Phase-IV Industrial Effluent Conduit Breach",
+        "incident_type": "pipeline_rupture",
+        "severity_score": 96.0,
+        "impact_radius_m": 500,
+        "duration_hours": 10.0,
+        "neighborhood": "Sitapura Industrial",
+        "population_exposed": 903,
+        "hospital_count": 0,
+        "fire_station_count": 0,
+        "school_count": 0,
+        "rank_a": 1,
+        "score_a": 96.0,
+        "rank_b": 18,
+        "score_b": 53.75
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.852,
+          26.755
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 5,
+        "title": "Bindayaka Industrial Area High-Voltage Arc Flash",
+        "incident_type": "transformer_fire",
+        "severity_score": 93.0,
+        "impact_radius_m": 600,
+        "duration_hours": 12.0,
+        "neighborhood": "Bindayaka Depot",
+        "population_exposed": 4355,
+        "hospital_count": 0,
+        "fire_station_count": 0,
+        "school_count": 0,
+        "rank_a": 2,
+        "score_a": 93.0,
+        "rank_b": 13,
+        "score_b": 58.46
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.672,
+          26.928
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 6,
+        "title": "Bhakrota Peripheral Feeder Pipe Severance",
+        "incident_type": "water_main_burst",
+        "severity_score": 89.0,
+        "impact_radius_m": 700,
+        "duration_hours": 8.0,
+        "neighborhood": "Bhakrota Periphery",
+        "population_exposed": 6346,
+        "hospital_count": 0,
+        "fire_station_count": 0,
+        "school_count": 0,
+        "rank_a": 3,
+        "score_a": 89.0,
+        "rank_b": 14,
+        "score_b": 56.75
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.685,
+          26.865
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 7,
+        "title": "JLN Marg 220kV Arterial Overhead Grid Collapse",
+        "incident_type": "power_line_down",
+        "severity_score": 76.0,
+        "impact_radius_m": 1400,
+        "duration_hours": 22.0,
+        "neighborhood": "Malviya Nagar / JLN",
+        "population_exposed": 38000,
+        "hospital_count": 3,
+        "fire_station_count": 1,
+        "school_count": 1,
+        "rank_a": 14,
+        "score_a": 76.0,
+        "rank_b": 2,
+        "score_b": 73.54
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.8115,
+          26.8495
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 8,
+        "title": "Gaurav Tower Commercial Axis Street Collapse",
+        "incident_type": "sinkhole",
+        "severity_score": 71.0,
+        "impact_radius_m": 850,
+        "duration_hours": 20.0,
+        "neighborhood": "Malviya Nagar",
+        "population_exposed": 16018,
+        "hospital_count": 1,
+        "fire_station_count": 0,
+        "school_count": 0,
+        "rank_a": 19,
+        "score_a": 71.0,
+        "rank_b": 21,
+        "score_b": 52.04
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.805,
+          26.853
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 9,
+        "title": "Calgiri Marg Major Siphon Trunk Backflow",
+        "incident_type": "sewage_overflow",
+        "severity_score": 65.0,
+        "impact_radius_m": 900,
+        "duration_hours": 24.0,
+        "neighborhood": "Malviya Nagar",
+        "population_exposed": 19234,
+        "hospital_count": 1,
+        "fire_station_count": 0,
+        "school_count": 1,
+        "rank_a": 23,
+        "score_a": 65.0,
+        "rank_b": 22,
+        "score_b": 50.73
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.818,
+          26.857
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 10,
+        "title": "Madhyam Marg Commercial Hub Gas Dispersion",
+        "incident_type": "gas_leak",
+        "severity_score": 80.0,
+        "impact_radius_m": 1300,
+        "duration_hours": 16.0,
+        "neighborhood": "Mansarovar Sector 5",
+        "population_exposed": 38000,
+        "hospital_count": 1,
+        "fire_station_count": 1,
+        "school_count": 1,
+        "rank_a": 10,
+        "score_a": 80.0,
+        "rank_b": 1,
+        "score_b": 73.62
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.762,
+          26.854
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 11,
+        "title": "Shipra Path Primary Pumping Station Trunk Failure",
+        "incident_type": "water_main_burst",
+        "severity_score": 74.0,
+        "impact_radius_m": 1150,
+        "duration_hours": 18.0,
+        "neighborhood": "Mansarovar",
+        "population_exposed": 34114,
+        "hospital_count": 0,
+        "fire_station_count": 1,
+        "school_count": 1,
+        "rank_a": 17,
+        "score_a": 74.0,
+        "rank_b": 9,
+        "score_b": 66.6
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.758,
+          26.862
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 12,
+        "title": "Kaveri Path 33kV Step-Down Unit Fire",
+        "incident_type": "transformer_fire",
+        "severity_score": 68.0,
+        "impact_radius_m": 800,
+        "duration_hours": 12.0,
+        "neighborhood": "Mansarovar Sector 8",
+        "population_exposed": 14087,
+        "hospital_count": 1,
+        "fire_station_count": 0,
+        "school_count": 0,
+        "rank_a": 22,
+        "score_a": 68.0,
+        "rank_b": 23,
+        "score_b": 49.83
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.769,
+          26.848
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 13,
+        "title": "Johari Bazaar High-Density Historic Feeder Snap",
+        "incident_type": "power_line_down",
+        "severity_score": 79.0,
+        "impact_radius_m": 950,
+        "duration_hours": 20.0,
+        "neighborhood": "Pink City",
+        "population_exposed": 32289,
+        "hospital_count": 0,
+        "fire_station_count": 1,
+        "school_count": 1,
+        "rank_a": 11,
+        "score_a": 79.0,
+        "rank_b": 8,
+        "score_b": 68.2
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.824,
+          26.922
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 14,
+        "title": "Tripolia Gate Heritage Aqueduct Burst",
+        "incident_type": "water_main_burst",
+        "severity_score": 73.0,
+        "impact_radius_m": 800,
+        "duration_hours": 24.0,
+        "neighborhood": "Pink City",
+        "population_exposed": 22417,
+        "hospital_count": 0,
+        "fire_station_count": 0,
+        "school_count": 1,
+        "rank_a": 18,
+        "score_a": 73.0,
+        "rank_b": 15,
+        "score_b": 55.85
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.821,
+          26.9245
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 15,
+        "title": "Chandpole Bazar Road Cavity Near Metro Shaft",
+        "incident_type": "sinkhole",
+        "severity_score": 81.0,
+        "impact_radius_m": 750,
+        "duration_hours": 18.0,
+        "neighborhood": "Chandpole",
+        "population_exposed": 29929,
+        "hospital_count": 0,
+        "fire_station_count": 0,
+        "school_count": 0,
+        "rank_a": 9,
+        "score_a": 81.0,
+        "rank_b": 6,
+        "score_b": 68.46
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.808,
+          26.926
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 16,
+        "title": "Queens Road CNG Underground Supply Severance",
+        "incident_type": "pipeline_rupture",
+        "severity_score": 77.0,
+        "impact_radius_m": 1100,
+        "duration_hours": 15.0,
+        "neighborhood": "Vaishali Nagar",
+        "population_exposed": 38000,
+        "hospital_count": 0,
+        "fire_station_count": 1,
+        "school_count": 0,
+        "rank_a": 13,
+        "score_a": 77.0,
+        "rank_b": 7,
+        "score_b": 68.24
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.742,
+          26.915
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 17,
+        "title": "Amrapali Circle Multi-Transformer Fire",
+        "incident_type": "transformer_fire",
+        "severity_score": 70.0,
+        "impact_radius_m": 850,
+        "duration_hours": 12.0,
+        "neighborhood": "Vaishali Nagar",
+        "population_exposed": 22933,
+        "hospital_count": 0,
+        "fire_station_count": 0,
+        "school_count": 0,
+        "rank_a": 20,
+        "score_a": 70.0,
+        "rank_b": 19,
+        "score_b": 52.91
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.736,
+          26.909
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 18,
+        "title": "Tonk Road Flyover Support Water Main Rupture",
+        "incident_type": "water_main_burst",
+        "severity_score": 75.0,
+        "impact_radius_m": 1250,
+        "duration_hours": 19.0,
+        "neighborhood": "Durgapura",
+        "population_exposed": 38000,
+        "hospital_count": 0,
+        "fire_station_count": 0,
+        "school_count": 0,
+        "rank_a": 16,
+        "score_a": 75.0,
+        "rank_b": 11,
+        "score_b": 64.06
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.792,
+          26.858
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 19,
+        "title": "Airport Link Road 132kV Pylon Line Dropped",
+        "incident_type": "power_line_down",
+        "severity_score": 83.0,
+        "impact_radius_m": 1000,
+        "duration_hours": 14.0,
+        "neighborhood": "Sanganer Airport Rd",
+        "population_exposed": 17038,
+        "hospital_count": 0,
+        "fire_station_count": 0,
+        "school_count": 0,
+        "rank_a": 7,
+        "score_a": 83.0,
+        "rank_b": 12,
+        "score_b": 58.78
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.805,
+          26.829
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 20,
+        "title": "Central Spine Stormdrain Overflow with Backpressure",
+        "incident_type": "sewage_overflow",
+        "severity_score": 63.0,
+        "impact_radius_m": 950,
+        "duration_hours": 22.0,
+        "neighborhood": "Vidhyadhar Nagar",
+        "population_exposed": 31473,
+        "hospital_count": 1,
+        "fire_station_count": 0,
+        "school_count": 0,
+        "rank_a": 24,
+        "score_a": 63.0,
+        "rank_b": 16,
+        "score_b": 55.51
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.776,
+          26.958
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 21,
+        "title": "Collectorate Circle Distribution Substation Blast",
+        "incident_type": "transformer_fire",
+        "severity_score": 76.0,
+        "impact_radius_m": 1050,
+        "duration_hours": 15.0,
+        "neighborhood": "Bani Park",
+        "population_exposed": 38000,
+        "hospital_count": 0,
+        "fire_station_count": 1,
+        "school_count": 0,
+        "rank_a": 15,
+        "score_a": 76.0,
+        "rank_b": 10,
+        "score_b": 64.78
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.792,
+          26.929
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 22,
+        "title": "Pratap Nagar Southern Perimeter Line Fault",
+        "incident_type": "power_line_down",
+        "severity_score": 88.0,
+        "impact_radius_m": 550,
+        "duration_hours": 9.0,
+        "neighborhood": "Pratap Nagar Ext",
+        "population_exposed": 2809,
+        "hospital_count": 0,
+        "fire_station_count": 0,
+        "school_count": 0,
+        "rank_a": 4,
+        "score_a": 88.0,
+        "rank_b": 20,
+        "score_b": 52.67
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.82,
+          26.791
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 23,
+        "title": "Jhotwara Industrial Sub-Branch Pipe Leak",
+        "incident_type": "water_main_burst",
+        "severity_score": 86.0,
+        "impact_radius_m": 600,
+        "duration_hours": 10.0,
+        "neighborhood": "Jhotwara Depot",
+        "population_exposed": 9321,
+        "hospital_count": 0,
+        "fire_station_count": 0,
+        "school_count": 0,
+        "rank_a": 5,
+        "score_a": 86.0,
+        "rank_b": 17,
+        "score_b": 54.38
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.725,
+          26.945
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 24,
+        "title": "Muhana Mandi Service Road Pavement Collapse",
+        "incident_type": "sinkhole",
+        "severity_score": 69.0,
+        "impact_radius_m": 450,
+        "duration_hours": 11.0,
+        "neighborhood": "Muhana Road",
+        "population_exposed": 1971,
+        "hospital_count": 0,
+        "fire_station_count": 0,
+        "school_count": 0,
+        "rank_a": 21,
+        "score_a": 69.0,
+        "rank_b": 24,
+        "score_b": 40.07
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.732,
+          26.805
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 25,
+        "title": "Jagatpura Railway Yard Culvert Overflow",
+        "incident_type": "sewage_overflow",
+        "severity_score": 62.0,
+        "impact_radius_m": 500,
+        "duration_hours": 16.0,
+        "neighborhood": "Jagatpura Yard",
+        "population_exposed": 2725,
+        "hospital_count": 0,
+        "fire_station_count": 0,
+        "school_count": 0,
+        "rank_a": 25,
+        "score_a": 62.0,
+        "rank_b": 25,
+        "score_b": 36.3
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.845,
+          26.82
+        ]
+      }
+    }
+  ]
+}

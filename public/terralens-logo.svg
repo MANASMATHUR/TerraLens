@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 390" role="img" aria-labelledby="title">
+  <title id="title">TerraLens — Jaipur mapped through a magnifying lens</title>
+  <defs>
+    <linearGradient id="city" x1="0" y1="0" x2="0.8" y2="1"><stop stop-color="#D99A37"/><stop offset="1" stop-color="#A96317"/></linearGradient>
+  </defs>
+  <g fill="none" stroke="#10243A" stroke-width="10" stroke-linecap="square">
+    <path d="M78 145h175M387 145h175"/>
+    <circle cx="320" cy="145" r="108" fill="#fff"/>
+    <path d="m397 223 60 60" stroke-width="22" stroke-linecap="round"/>
+  </g>
+  <path d="M233 181q24-27 49 0t48 0 48 0v-74h-16V92h-13v15h-8V87h-13v20h-8V96h-13v11h-8V80h-14v27h-9V96h-14v11h-8V89h-13v18h-8v-9h-13v9h-9v74z" fill="url(#city)"/>
+  <g fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round">
+    <path d="M256 173v-45q0-10 10-10t10 10v45m17 0v-54q0-10 10-10t10 10v54m18 0v-47q0-10 10-10t10 10v47"/>
+    <path d="M254 144h24m19-8h22m16 13h22"/>
+  </g>
+  <text x="320" y="350" text-anchor="middle" fill="#10243A" font-family="Arial, sans-serif" font-size="62" letter-spacing="1">TerraLens</text>
+</svg>

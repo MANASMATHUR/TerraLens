@@ -1,0 +1,357 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "h1",
+        "name": "SMS Medical College & Hospital",
+        "asset_type": "hospital",
+        "capacity": 1600
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.7873,
+          26.9124
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "h2",
+        "name": "Fortis Escorts Hospital",
+        "asset_type": "hospital",
+        "capacity": 350
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.8089,
+          26.8505
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "h3",
+        "name": "JK Lone Children Hospital",
+        "asset_type": "hospital",
+        "capacity": 450
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.7694,
+          26.8457
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "h4",
+        "name": "Apex Hospital Malviya Nagar",
+        "asset_type": "hospital",
+        "capacity": 200
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.814,
+          26.854
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "h5",
+        "name": "Mahatma Gandhi Medical College",
+        "asset_type": "hospital",
+        "capacity": 850
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.86,
+          26.782
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "h6",
+        "name": "Narayana Multispeciality Hospital",
+        "asset_type": "hospital",
+        "capacity": 330
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.813,
+          26.838
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "h7",
+        "name": "Manipal Hospital Vidhyadhar Nagar",
+        "asset_type": "hospital",
+        "capacity": 280
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.779,
+          26.961
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "h8",
+        "name": "Santokba Durlabhji Memorial Hospital",
+        "asset_type": "hospital",
+        "capacity": 500
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.802,
+          26.896
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "f1",
+        "name": "Ghat Gate Central Fire Station",
+        "asset_type": "fire_station",
+        "capacity": 6
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.827,
+          26.9185
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "f2",
+        "name": "Mansarovar Fire Station",
+        "asset_type": "fire_station",
+        "capacity": 4
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.7574,
+          26.8534
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "f3",
+        "name": "Malviya Nagar Industrial Fire Station",
+        "asset_type": "fire_station",
+        "capacity": 5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.812,
+          26.8481
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "f4",
+        "name": "Vaishali Nagar Fire Station",
+        "asset_type": "fire_station",
+        "capacity": 4
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.739,
+          26.917
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "f5",
+        "name": "Bani Park Fire Station",
+        "asset_type": "fire_station",
+        "capacity": 4
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.789,
+          26.931
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "f6",
+        "name": "Sitapura Industrial Area Fire Station",
+        "asset_type": "fire_station",
+        "capacity": 4
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.845,
+          26.772
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "s1",
+        "name": "Maharaja Sawai Man Singh Vidyalaya",
+        "asset_type": "school",
+        "capacity": 3000
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.785,
+          26.905
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "s2",
+        "name": "St. Xavier's Senior Secondary School",
+        "asset_type": "school",
+        "capacity": 2800
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.78,
+          26.91
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "s3",
+        "name": "Delhi Public School Jaipur (Ajmer Rd)",
+        "asset_type": "school",
+        "capacity": 3500
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.715,
+          26.86
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "s4",
+        "name": "Neerja Modi School Mansarovar",
+        "asset_type": "school",
+        "capacity": 3200
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.765,
+          26.855
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "s5",
+        "name": "Ryan International School Mansarovar",
+        "asset_type": "school",
+        "capacity": 2500
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.768,
+          26.868
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "s6",
+        "name": "Seedling Public School Malviya Nagar",
+        "asset_type": "school",
+        "capacity": 2200
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.819,
+          26.849
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "s7",
+        "name": "Tagore International School Mansarovar",
+        "asset_type": "school",
+        "capacity": 2600
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.775,
+          26.839
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "s8",
+        "name": "The Palace School City Palace",
+        "asset_type": "school",
+        "capacity": 1800
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.823,
+          26.925
+        ]
+      }
+    }
+  ]
+}

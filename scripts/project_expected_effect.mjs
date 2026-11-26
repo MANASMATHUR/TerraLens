@@ -1,7 +1,8 @@
 /**
  * Offline synthetic scenario projection for Track 01.
  * This script never calls Flagsmith, the app API, or the session store.
- * Its output is a model projection, not participant or experiment data.
+ * Its output is a model projection, not experiment data or observations of
+ * scripted QA operators, simulated, or human emergency operators.
  */
 import fs from 'node:fs';
 
@@ -21,11 +22,11 @@ const TOP_RANKED_WINDOW = 12;
 const FLAGSMITH_MIN_IDENTITIES_PER_ARM = 50;
 const PERSONA_MIXES = [
   {
-    name: 'baseline_mixed_operators',
+    name: 'baseline_mixed_scripted_qa',
     weights: { top_ranked_bias: 35, critical_infrastructure: 25, population_focus: 20, imperfect_dispatcher: 15, delayed_dispatcher: 5 },
   },
   {
-    name: 'severity_first_sensitivity',
+    name: 'severity_first_sensitivity_scripted_qa',
     weights: { top_ranked_bias: 60, critical_infrastructure: 15, population_focus: 5, imperfect_dispatcher: 15, delayed_dispatcher: 5 },
   },
 ];
@@ -149,7 +150,7 @@ function runProjection(mix, seed) {
 
   return {
     persona_mix_percent: mix.weights,
-    simulated_operator_draws_per_arm: validPeople,
+    simulated_persona_draws_per_arm: validPeople,
     projected_mean_consequence_capture: {
       severity_only: Number(control.mean.toFixed(4)),
       spatial_impact: Number(treatment.mean.toFixed(4)),
@@ -178,7 +179,7 @@ const severityRank = new Map(ranked.severity_only.map((incident, index) => [inci
 const baseline = runProjection(PERSONA_MIXES[0], 20261126);
 const sensitivity = runProjection(PERSONA_MIXES[1], 20261127);
 console.log(JSON.stringify({
-  label: 'OFFLINE SYNTHETIC PROJECTION — not Flagsmith results or observed participants',
+  label: 'OFFLINE SYNTHETIC PROJECTION — not Flagsmith results or observations of scripted QA operators, simulated, or human emergency operators',
   benchmark_top3: benchmark,
   incident_pool: {
     total: incidents.length,

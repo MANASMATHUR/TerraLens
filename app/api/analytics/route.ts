@@ -64,6 +64,8 @@ export async function GET() {
 
     return NextResponse.json({
       source: 'flagsmith_management_api',
+      cohort_label: 'scripted QA operators, simulated',
+      cohort_note: 'Flagsmith reports experiment-wide totals; earlier setup QA exposures are included in the same aggregate.',
       api_answered: resultsResponse.ok,
       experiment_id: experimentId,
       dashboard_url: dashboardUrl,

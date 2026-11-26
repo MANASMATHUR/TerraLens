@@ -1,113 +1,127 @@
 # TerraLens
 
-TerraLens is a three-panel incident-prioritization task for a synthetic Jaipur scenario. Flagsmith assigns the ranking strategy and receives the exposure and outcome events; the app reads experiment results from the Flagsmith Management API.
+TerraLens is a three-panel incident-prioritization task for a synthetic Jaipur scenario. Flagsmith assigns one of two ranking strategies and receives exposure and outcome events; `/analytics` reads results only from the Flagsmith Management API.
 
 ## Hypothesis
 
-Adding spatial consequence to incident ranking increases operators’ mean consequence capture compared with severity-only ranking.
+Among the scripted QA operators, simulated, adding spatial consequence to incident ranking raises mean consequence capture compared with severity-only ranking.
 
 ## Five-minute setup
 
-1. Install Node.js 22 or later and npm.
-2. Install dependencies and copy the environment template:
+1. Install Node.js 22 or later and npm, then install dependencies and copy the environment template:
 
    ```powershell
    npm ci
    Copy-Item .env.example .env.local
    ```
 
-3. Fill the three required credentials in `.env.local`: the Development client environment key, Development server environment key, and an organisation Management API key. Their origins are listed under [Environment variables](#environment-variables). The non-secret experiment and project IDs are already set to `581` and `55892`.
-4. Generate the ignored server-only benchmark file and start the app:
+2. In `.env.local`, fill the Flagsmith Development client key, server key, and organisation Management API key. Their origins are listed under [Environment variables](#environment-variables). Keep keys local. The experiment and project IDs are already `581` and `55892`.
+3. Generate the ignored server-only benchmark file, then start the app:
 
    ```powershell
    npm run benchmark:recompute
    npm run dev
    ```
 
-5. Open `/flags/health`, then `/task`. Open `/analytics` to view Flagsmith results. Use a real operator run for outcome measurement; the offline projection script does not send events.
+4. Open `/flags/health`, then `/task`; open `/analytics` for the Flagsmith payload. A connected warehouse is required for experiment event ingestion. [Flagsmith warehouse setup](https://docs.flagsmith.com/experimentation/connect-a-warehouse)
 
-## Flagsmith dashboard setup
+## Flagsmith experiment 581
 
 The live resources are in **Flagsmith → TerraLens (project 55892) → Development**.
 
-1. Under Environments, open `incident_prioritization_strategy`. Its enabled multivariate value is `severity_only`, with one keyed option `Variant_1` whose value is `spatial_impact`.
-2. Under Experiments, open **TerraLens: Spatial Impact vs Severity**, experiment **581**. It is Running, has a 100% rollout, and assigns Control 50% / Variant_1 50%.
-3. The experiment detail shows `priority_task_submitted` as the primary metric and Mean in its Analysis table. The two additional metric associations are `priority_task_success` and `task_duration_seconds`; the current detail page does not show them as separate rows. They were verified through the documented `GET /api/v1/environments/{environment_key}/experiments/581/metrics/` endpoint.
-4. The experiment audience is the full environment (`match: any`, no segment IDs). No segment is used by the experiment.
+1. Under Environments, open `incident_prioritization_strategy`. It is enabled and multivariate: the control value is `severity_only`; the one keyed option is `Variant_1`, with value `spatial_impact`.
+2. Under Experiments, open **TerraLens: Spatial Impact vs Severity**, experiment **581**. The configured rollout is 100%, split 50% Control and 50% Variant_1.
+3. The primary metric is `priority_task_submitted` (Mean). `priority_task_success` (Occurrence) and `task_duration_seconds` (Mean) are also attached. The metric associations were checked through the experiment metrics endpoint.
+4. The experiment targets the full Development audience (`match: any`, no segment IDs). No segment is attached.
 
-Do not change the live split while collecting results. Flagsmith’s experiment page is the source for exposures and statistical results.
+The SDK `getExperimentFlag` call supplies the arm and records an exposure. The session and submission APIs re-read the identity assignment; a claimed or stored arm that differs from Flagsmith is rejected. Submission metrics are computed server-side. The simulator does not call `trackExposureEvent` directly or choose an arm.
 
-## How Flagsmith is used
+### Authorized scripted QA run
+
+The traffic cohort is explicitly **scripted QA operators, simulated**. Each ID is prefixed `qa_sim_`; the session API derives and stores `is_simulated=true`. Local run progress is written to ignored `.data/track01-simulated-ledger.json`; it is not an experiment-results source.
+
+With the app running and `.env.local` configured, run the 10-session dry run first:
+
+```powershell
+npm run simulate -- --dry-run
+```
+
+Refresh experiment 581 in the Flagsmith dashboard and verify five new exposures on each arm and nonzero primary conversion events before proceeding. Then target 100 scripted sessions per arm total, including the dry run:
+
+```powershell
+npm run simulate -- --target-per-arm 100
+```
+
+The script batches ten sessions, logs Flagsmith-assigned exposures, submissions, primary conversion-event dispatches, and success-event dispatches per arm, and exits nonzero if the split drifts beyond 10%. Counts in the script log are execution diagnostics. Quote experiment measurements only from Flagsmith after refreshing the dashboard.
+
+**Cohort: target 100 scripted QA sessions per arm, simulated personas; not human behaviour.**
+
+## How I used Flagsmith
 
 | Flag, config, metric, or segment | Live value | Reason |
 |---|---|---|
-| Multivariate flag `incident_prioritization_strategy` | Control value `severity_only`; keyed `Variant_1` value `spatial_impact`; 50/50 split | Flagsmith’s `getExperimentFlag` assignment decides which ranking is rendered. The app records an exposure when that ranking is displayed and refuses task participation if Flagsmith cannot verify the arm. |
-| Model config flag name `incident_prioritization_model_config` | Not present in the live Flagsmith project. When no value is returned, the app uses its validated code defaults and marks them as not remotely verified. | Keeps the scoring rule explicit. The strategy flag remains the assignment source; the weights below are not claimed as live Flagsmith remote config. |
-| Code default, `severity_only` | Population/facility/accessibility weights `0/0/0`; `mix_factor` `0.45` | Keeps the control ranking severity-only. |
-| Code default, `spatial_impact` | Population/facility/accessibility weights `0.60/0.30/0.10`; `mix_factor` `0.45` | Combines severity with population, facility, and accessibility context. |
-| Task config defaults | Select 3 incidents; pass threshold 2 of 3; 120-second task timer; benchmark `v2.0`; experiment ID `581` | Defines the task and the server-validated benchmark version. |
-| Boolean flag name `incident_consequence_fallback_enabled` | Not present in the live project; `hasFeature` therefore remains false | Prevents a missing spatial layer from silently becoming a treatment observation. The task fails closed if spatial context is unavailable. |
-| Primary metric `priority_task_submitted` | Mean, higher is better; event `priority_task_submitted`; numeric value is server-computed `consequence_capture` in `[0,1]` | Measures the mean consequence of the selected three incidents divided by the benchmark top-three mean consequence, capped at 1. |
-| Secondary metric `priority_task_success` | Occurrence, higher is better; event `priority_task_success` | Records whether at least 2 of the 3 selected incidents match the benchmark top three. |
-| Guardrail metric `task_duration_seconds` | Mean, lower is better; event `task_duration_seconds` | Uses server-clock elapsed seconds from task start to submission. |
-| Segment targeting | None | Both arms use the experiment’s full Development audience. There is no `qa_rehearsal` segment. |
-
-All outcome events use the same participant identifier as the Flagsmith exposure. The server recomputes the primary value and checks the stored session arm against Flagsmith before it records outcomes.
+| Multivariate flag `incident_prioritization_strategy` | Control `severity_only`; keyed option `Variant_1` = `spatial_impact`; 50/50 | `getExperimentFlag` decides which ranking the app uses and records the exposure at flag evaluation. |
+| Model config flag `incident_prioritization_model_config` | Referenced by the app but absent in the live project; validated code defaults apply and are marked not remotely verified. | Keeps the scoring inputs explicit. The strategy flag remains the sole arm authority. |
+| `severity_only` config defaults | Population/facility/accessibility weights `0/0/0`; `mix_factor=0.45`. | Preserves severity-only ordering. |
+| `spatial_impact` config defaults | Weights `0.60/0.30/0.10`; `mix_factor=0.45`. | Adds population, facility, and accessibility context to severity. |
+| Task config defaults | Select 3 incidents; success threshold 2 of 3; 120-second limit; benchmark v2.0; experiment ID 581. | Defines the task and server-side evaluation. |
+| Boolean flag `incident_consequence_fallback_enabled` | Absent from the live project; `hasFeature` remains false. | Prevents missing spatial data from silently becoming a treatment task. |
+| Primary metric `priority_task_submitted` | Mean, higher is better; event value is server-computed `consequence_capture` in `[0,1]`. | Measures the mean consequence of selected incidents relative to the benchmark top-three mean, capped at 1. |
+| Secondary metric `priority_task_success` | Occurrence, higher is better; emitted when at least 2 of 3 selected incidents match the benchmark top three. | Reports the binary benchmark success outcome separately. |
+| Guardrail `task_duration_seconds` | Mean, lower is better; server-clock elapsed seconds. | Checks that the ranking does not slow task completion. |
+| Segment targeting | None; full Development audience. | The experiment is not segment-targeted. Scripted IDs carry the `qa_sim_` prefix; this does not create a Flagsmith segment. |
 
 ## Results and verdict
 
-`/api/analytics` reads the Flagsmith Management API result, exposure, and experiment endpoints. For a computed result it shows per-variant `evaluations` as exposures, `conversions`, `conversion_rate`, `chance_to_win`, `winner`, `recommendation`, and `sample_size_warning`. It shows `statistics.lift` verbatim under **lift and interval as Flagsmith reports it**. The documented result payload has no separate numeric credible-interval field, so the app does not calculate one.
+`/api/analytics` reads the documented Flagsmith experiment results, exposures, and configuration endpoints. For a documented result, it renders the per-variant `evaluations`, `conversions`, `conversion_rate`, `chance_to_win`, `statistics.lift` verbatim, `winner`, `recommendation`, and `sample_size_warning`. Flagsmith's lift text is displayed under **lift and interval as Flagsmith reports it**; TerraLens does not calculate a confidence or credible interval. It shows the exposure split from Flagsmith and never uses local SQLite counts as Flagsmith results.
 
-The verdict text is exactly `winning`, `losing`, or `inconclusive`. Flagsmith’s glossary defines winning as over 95% chance to beat control, losing as under 5%, and inconclusive otherwise. Its SRM guidance warns at p < 0.001 once there are at least 100 identities. Below that floor, `/analytics` shows the observed and configured split and says the check is not assessed yet. [Analyse an Experiment](https://docs.flagsmith.com/experimentation/analyse-an-experiment) · [Statistics Glossary](https://docs.flagsmith.com/experimentation/statistics)
+When the results value is null, the page shows the Flagsmith exposure count and says the conversion count is unavailable in the null payload. The exposure response does not contain conversions, so TerraLens does not substitute a warehouse event total or invent a number. When a response does not match the documented `ExperimentResults` shape, the page reports that and does not infer a verdict from the undocumented fields. [Flagsmith Management API Swagger](https://api.flagsmith.com/api/v1/docs/) · [Analyse an Experiment](https://docs.flagsmith.com/experimentation/analyse-an-experiment)
 
-If `results` is null, the page shows the exposure total from Flagsmith and marks conversions unavailable. The exposures response does not include a conversion count, so the page does not invent zero. If the results request fails, the page says Flagsmith did not answer. It never presents SQLite or simulated values as Flagsmith results.
+**Run result:** pending the authorized scripted QA run. Replace this line with the generated Flagsmith verdict sentence, verbatim, after reading the refreshed documented payload. The only verdict labels are `winning`, `losing`, and `inconclusive`; a simulated result describes this scripted cohort only and does not establish human operator performance.
 
-## Expected effect: offline projection only
+## Expected effect: offline synthetic projection only
 
-Run `npm run benchmark:project` for a deterministic synthetic scenario projection. It samples selections from the existing 25-incident dataset, retains every incident in both rankings, and uses the current benchmark top three (incidents 3, 10, and 2). The severity-only positions of those targets are 6, 10, and 8; the top-rank persona now samples a 12-incident window, so the control can sometimes select two benchmark targets.
+`npm run benchmark:project` runs an offline model projection. It retains all 25 incidents in both rankings and samples the existing persona rules from a top-12 window, which lets the severity-only persona sometimes select benchmark incidents at severity ranks 6, 8, and 10. The output is labeled **OFFLINE SYNTHETIC PROJECTION** and never calls Flagsmith or the app API.
 
-The script labels all output **OFFLINE SYNTHETIC PROJECTION — not Flagsmith results or observed participants** and does not call Flagsmith or the app API. With 200,000 simulated operator draws per persona mix, it projects:
-
-| Persona mix | Severity-only mean capture | Spatial-impact mean capture | Projected difference (on the 0–1 capture metric) | Enrolled people per arm |
+| Synthetic persona mix | Projected severity-only mean capture | Projected spatial-impact mean capture | Projected difference | Projection sample target per arm |
 |---|---:|---:|---:|---:|
-| Baseline: 35% top-rank, 25% infrastructure, 20% population, 15% imperfect, 5% delayed | 0.6777 | 0.9754 | +0.2976 (Cohen’s d 1.62) | 53 |
-| Sensitivity: 60% top-rank, 15% infrastructure, 5% population, 15% imperfect, 5% delayed | 0.6064 | 0.9600 | +0.3535 (Cohen’s d 2.069) | 53 |
+| Baseline: 35% top-rank, 25% infrastructure, 20% population, 15% imperfect, 5% delayed | 0.6777 | 0.9754 | +0.2976 (Cohen's d 1.62) | 53 enrolled |
+| Sensitivity: 60% top-rank, 15% infrastructure, 5% population, 15% imperfect, 5% delayed | 0.6064 | 0.9600 | +0.3535 (Cohen's d 2.069) | 53 enrolled |
 
-The planning target is 50 valid submissions per arm to meet Flagsmith’s 50-identity reporting floor, with 53 enrolled per arm allowing for the model’s 5% delayed-dispatch share. The model-only normal approximation would require fewer observations; the platform floor sets this planning minimum. These optimistic synthetic effects are not forecasts of real operator behavior or a power guarantee. Do not use them as experiment results.
+These are expected effects from synthetic persona choices, not Flagsmith measurements, observed sessions, forecasts of human behavior, or a power guarantee. The 53-per-arm projection target includes the 50-identity reporting floor and a 5% delayed-session allowance. The authorized run target is 100 scripted QA sessions per arm.
 
-## Limitations and current data
+## Limitations
 
-- All 25 incidents and their consequence context are synthetic. The consequence score is a prototype proxy, not a calibrated emergency-impact measure.
-- As checked on 26 November 2026, the only live exposures shown were the two exposure-only QA identities: one Control and one Variant_1. They created no task sessions or outcome events. The Flagsmith result endpoint returned `results: null`; there is no measured lift or verdict yet.
-- The Development Flagsmith warehouse currently reports `connected` with 851 events and 4 unique event names. Those counters include historical events; they are not 851 experiment participants. [Connect a Warehouse](https://docs.flagsmith.com/experimentation/connect-a-warehouse)
-- `incident_prioritization_model_config` and `incident_consequence_fallback_enabled` are referenced by the code but are absent from the live project. Model weights currently come from the code defaults above, not a Flagsmith config value.
-- SQLite stores local session and task state only. It is never the experiment-results source.
-- `scripts/simulate_traffic.mjs` is disabled. `scripts/simulate_track01_traffic.mjs` only supports an explicit exposure-only smoke run; use `scripts/project_expected_effect.mjs` for offline projections.
+- The 25 incidents, locations, and consequence context are synthetic; consequence capture is a prototype proxy, not a calibrated emergency-impact measure.
+- The scripted personas and their incident selections are synthetic. This cohort cannot establish how human emergency operators would rank incidents. Human behavior would require a separately recruited, consented operator study and must be reported separately from experiment 581's scripted result.
+- Flagsmith returns experiment-wide aggregates. Earlier setup QA exposures on experiment 581 are part of those aggregates; the API does not separate them from the new `qa_sim_` scripted cohort. No human operator data is intentionally sent by the authorized scripted run.
+- `incident_prioritization_model_config` and `incident_consequence_fallback_enabled` are absent from the live project; the documented defaults above are used.
+- The app keeps local task state in SQLite as a fallback. SQLite is not the experiment-results source.
 
 ## Environment variables
 
-Copy `.env.example` to `.env.local`. The example contains no credentials.
+Copy `.env.example` to `.env.local`. The example contains no credentials. Values marked private stay local and must never be committed.
 
 | Variable | Required | Origin and use |
 |---|---|---|
-| `NEXT_PUBLIC_FLAGSMITH_ENVIRONMENT_KEY` | Yes | Flagsmith Development client-side environment key; used by the browser SDK for flag evaluation and exposures. |
-| `FLAGSMITH_SERVER_KEY` | Yes | Flagsmith Development server-side environment key; used by the server SDK and as the HMAC key for signed run config. Keep private. |
-| `FLAGSMITH_MASTER_API_KEY` | Yes | Flagsmith organisation Management API key; used server-side to read experiment results, exposures, and warehouse status. Keep private. |
-| `FLAGSMITH_EXPERIMENT_ID` | Yes | Experiment ID from the Flagsmith experiment page/URL; set to `581` for this project. |
-| `NEXT_PUBLIC_FLAGSMITH_PROJECT_ID` | Yes for the dashboard link | Project ID from the Flagsmith project URL; set to `55892`. |
-| `NEXT_PUBLIC_FLAG_STRATEGY` | Optional | Feature name override; defaults to the live flag `incident_prioritization_strategy`. |
-| `NEXT_PUBLIC_FLAG_MODEL_CONFIG` | Optional | Remote-config feature name override; defaults to `incident_prioritization_model_config`, which is absent from the live project. |
-| `NEXT_PUBLIC_FLAG_CONSEQUENCE_FALLBACK` | Optional | Boolean feature name override; defaults to `incident_consequence_fallback_enabled`, absent from the live project. |
-| `NEXT_PUBLIC_METRIC_TASK_SUBMITTED` | Optional | Event name override; defaults to `priority_task_submitted`. |
-| `NEXT_PUBLIC_METRIC_TASK_SUCCESS` | Optional | Event name override; defaults to `priority_task_success`. |
-| `NEXT_PUBLIC_METRIC_TASK_DURATION` | Optional | Event name override; defaults to `task_duration_seconds`. |
-| `NEXT_PUBLIC_SUPABASE_URL` | Optional | Supabase project API URL; enables remote session persistence when paired with its keys. |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Optional | Supabase project anon/public API key for the browser client. |
-| `SUPABASE_SERVICE_ROLE_KEY` | Optional | Supabase project service-role key for server persistence. Keep private. |
-| `ADMIN_AUDIT_SECRET` | Optional | A secret you generate yourself for the separate protected benchmark-audit endpoint; not needed for the experiment demo. Keep private. |
+| `NEXT_PUBLIC_FLAGSMITH_ENVIRONMENT_KEY` | Yes | Flagsmith Development client environment key from the environment settings; used by the browser SDK. |
+| `FLAGSMITH_SERVER_KEY` | Yes for server evaluation and simulation | Flagsmith Development server environment key from the environment settings; used by the server SDK and run-config signature. Private. |
+| `FLAGSMITH_MASTER_API_KEY` | Yes for analytics | Organisation Management API key from Flagsmith; reads experiment results, exposures, and warehouse state. Private. |
+| `FLAGSMITH_EXPERIMENT_ID` | Yes | Experiment page/URL ID; set to `581`. |
+| `NEXT_PUBLIC_FLAGSMITH_PROJECT_ID` | Yes for dashboard link | Project URL ID; set to `55892`. |
+| `NEXT_PUBLIC_FLAG_STRATEGY` | Optional | Strategy feature key override; default `incident_prioritization_strategy`. |
+| `NEXT_PUBLIC_FLAG_MODEL_CONFIG` | Optional | Remote model config feature key override; default `incident_prioritization_model_config`. |
+| `NEXT_PUBLIC_FLAG_CONSEQUENCE_FALLBACK` | Optional | Boolean fallback feature key override; default `incident_consequence_fallback_enabled`. |
+| `NEXT_PUBLIC_METRIC_TASK_SUBMITTED` | Optional | Primary event override; default `priority_task_submitted`. |
+| `NEXT_PUBLIC_METRIC_TASK_SUCCESS` | Optional | Secondary event override; default `priority_task_success`. |
+| `NEXT_PUBLIC_METRIC_TASK_DURATION` | Optional | Guardrail event override; default `task_duration_seconds`. |
+| `NEXT_PUBLIC_SUPABASE_URL` | Optional | Supabase project API URL from Project Settings → API; enables remote session persistence with its keys. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Optional | Supabase public anon key from Project Settings → API. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Optional | Supabase private service-role key from Project Settings → API. Private. |
+| `ADMIN_AUDIT_SECRET` | Optional | Generate locally for the separate protected benchmark-audit endpoint. Private; not needed for the experiment demo. |
 
-`.env.local` is ignored by Git. Do not put server or Management API keys in any `NEXT_PUBLIC_*` variable. No key belongs in a commit.
+`.env.local` is ignored by Git. Never put server or Management API keys in a `NEXT_PUBLIC_*` variable. No key belongs in a commit.
 
 ## Demo
 
-See [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for the timed 2:30 recording plan. If the result endpoint still returns `null` when recording, show the empty state and say so; do not manufacture an interval or a winner.
+See [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for the 2:30 sequence. Every traffic/result statement must say **scripted QA operators, simulated**. Show the Flagsmith dashboard refresh and the returned interval text; if Flagsmith has not computed the result, say so.

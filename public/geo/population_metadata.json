@@ -1,0 +1,27 @@
+{
+  "display_layer": {
+    "status": "synthetic_visualization",
+    "source": "Project-generated radial-decay model",
+    "year": null,
+    "resolution": "Hexagons with approximately 0.83 km radius and 1.3 km center spacing; visualization grid, not raster observations",
+    "crs": "EPSG:4326 (WGS 84)",
+    "coverage": "Jaipur urban extent; approximately 75.66–75.92 E, 26.78–27.02 N",
+    "license": "Generated for this project; not census or WorldPop data",
+    "separate_from_experiment_scoring": true
+  },
+  "verified_worldpop_candidate": {
+    "status": "available_but_not_integrated",
+    "source": "WorldPop India spatial distribution of population 2020",
+    "url": "https://hub.worldpop.org/geodata/summary?id=6527",
+    "data_url": "https://data.worldpop.org/GIS/Population/Global_2000_2020/2020/IND/ind_ppp_2020.tif",
+    "year": 2020,
+    "resolution": "3 arc-seconds (approximately 100 m at the equator)",
+    "crs": "Geographic Coordinate System, WGS 84 (EPSG:4326)",
+    "units": "Estimated people per pixel",
+    "coverage": "India-wide GeoTIFF; Jaipur is within national coverage; not city-clipped",
+    "license": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+    "doi": "10.5258/SOTON/WP00645",
+    "download_size_reported_by_publisher": "1.72 GB for the India dataset",
+    "reason_not_integrated": "The project has no raster clipping or tile-serving pipeline; the publisher provides the full national GeoTIFF, which is too large to bundle as a city layer."
+  }
+}

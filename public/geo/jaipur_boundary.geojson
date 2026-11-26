@@ -1,0 +1,64 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Jaipur Metropolitan Region",
+        "state": "Rajasthan",
+        "country": "India"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.68,
+              26.98
+            ],
+            [
+              75.76,
+              27.01
+            ],
+            [
+              75.86,
+              26.99
+            ],
+            [
+              75.91,
+              26.94
+            ],
+            [
+              75.9,
+              26.85
+            ],
+            [
+              75.87,
+              26.76
+            ],
+            [
+              75.81,
+              26.74
+            ],
+            [
+              75.74,
+              26.77
+            ],
+            [
+              75.69,
+              26.83
+            ],
+            [
+              75.66,
+              26.91
+            ],
+            [
+              75.68,
+              26.98
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

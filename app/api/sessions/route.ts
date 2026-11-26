@@ -18,12 +18,16 @@ export async function POST(req: Request) {
       variant,
       assignment_source = 'deterministic_fallback',
       flagsmith_exposure_recorded = false,
-      is_simulated = false,
       started_at = null,
     } = body;
 
     if (!participant_id || typeof participant_id !== 'string' || !variant) {
       return NextResponse.json({ error: 'Missing participant_id or variant' }, { status: 400 });
+    }
+
+    const isSimulated = participant_id.startsWith('qa_sim_');
+    if (body.is_simulated === true && !isSimulated) {
+      return NextResponse.json({ error: 'Simulated sessions require a qa_sim_ participant_id.' }, { status: 400 });
     }
 
     if (!isExperimentVariant(variant)) {
@@ -67,11 +71,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Claimed variant does not match the Flagsmith assignment.' }, { status: 409 });
     }
 
-    const clientConfigResult = validateRemoteConfig(body.model_config, assignedVariant);
+    const serverConfig = await getServerModelConfig(participant_id, assignedVariant);
+    const clientConfigResult = isSimulated
+      ? { valid: true, config: serverConfig }
+      : validateRemoteConfig(body.model_config, assignedVariant);
     if (!clientConfigResult.valid || !clientConfigResult.config) {
       return NextResponse.json({ error: 'Missing or invalid Flagsmith model config for this run.' }, { status: 400 });
     }
-    const serverConfig = await getServerModelConfig(participant_id, assignedVariant);
     const now = started_at || new Date().toISOString();
 
     const respondWithConfig = (session: any, storageBackend: string) => {
@@ -94,6 +100,9 @@ export async function POST(req: Request) {
         if (existing.variant !== assignedVariant) {
           return NextResponse.json({ error: 'Stored session variant does not match the Flagsmith assignment.' }, { status: 409 });
         }
+        if (Boolean(existing.is_simulated) !== isSimulated) {
+          return NextResponse.json({ error: 'Stored session simulation label does not match its qa_sim_ identity.' }, { status: 409 });
+        }
         return respondWithConfig(existing, 'supabase');
       }
 
@@ -104,6 +113,7 @@ export async function POST(req: Request) {
           scenario_id,
           variant: assignedVariant,
           started_at: now,
+          is_simulated: isSimulated,
         })
         .select()
         .single();
@@ -118,6 +128,9 @@ export async function POST(req: Request) {
     if (existingLocal) {
       if (existingLocal.variant !== assignedVariant) {
         return NextResponse.json({ error: 'Stored session variant does not match the Flagsmith assignment.' }, { status: 409 });
+      }
+      if (Boolean(existingLocal.is_simulated) !== isSimulated) {
+        return NextResponse.json({ error: 'Stored session simulation label does not match its qa_sim_ identity.' }, { status: 409 });
       }
       return respondWithConfig(existingLocal, 'local_sqlite');
     }
@@ -134,7 +147,7 @@ export async function POST(req: Request) {
       selected_incident_ids: null,
       assignment_source,
       flagsmith_exposure_recorded: Boolean(flagsmith_exposure_recorded),
-      is_simulated: Boolean(is_simulated),
+      is_simulated: isSimulated,
     };
     saveLocalSession(newLocal);
     return respondWithConfig(newLocal, 'local_sqlite');
