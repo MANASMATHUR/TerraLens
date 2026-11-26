@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "simulate": "node scripts/simulate_traffic.mjs",
+    "simulate": "node --env-file=.env.local scripts/simulate_track01_traffic.mjs",
     "benchmark:recompute": "node scripts/recompute_benchmark.mjs",
     "benchmark:project": "node scripts/project_expected_effect.mjs",
     "generate-data": "python data-pipeline/generate_jaipur_gis.py"
