@@ -26,7 +26,7 @@ export interface ExperimentRemoteConfig {
 
 export const DEFAULT_EXPERIMENT_CONFIG: Record<ExperimentVariant, Omit<ExperimentRemoteConfig, 'is_remote_verified'>> = {
   severity_only: {
-    experiment_id: 468,
+    experiment_id: 581,
     experiment_version: 'v1.0',
     strategy: 'severity_only',
     population_weight: 0.0,
@@ -36,11 +36,11 @@ export const DEFAULT_EXPERIMENT_CONFIG: Record<ExperimentVariant, Omit<Experimen
     top3_pass_matches: 2,
     selection_limit: 3,
     task_time_limit_seconds: 120,
-    benchmark_version: 'v1.0',
+    benchmark_version: 'v2.0',
     configuration_version: 'default_v1',
   },
   spatial_impact: {
-    experiment_id: 468,
+    experiment_id: 581,
     experiment_version: 'v1.0',
     strategy: 'spatial_impact',
     population_weight: 0.60,
@@ -50,7 +50,7 @@ export const DEFAULT_EXPERIMENT_CONFIG: Record<ExperimentVariant, Omit<Experimen
     top3_pass_matches: 2,
     selection_limit: 3,
     task_time_limit_seconds: 120,
-    benchmark_version: 'v1.0',
+    benchmark_version: 'v2.0',
     configuration_version: 'default_v1',
   },
 };
@@ -70,7 +70,7 @@ export function validateRemoteConfig(
       config: {
         ...def,
         strategy: assignedVariant,
-        is_remote_verified: true,
+        is_remote_verified: false,
       },
     };
   }
@@ -102,7 +102,7 @@ export function validateRemoteConfig(
   return {
     valid: true,
     config: {
-      experiment_id: raw.experiment_id || 468,
+      experiment_id: raw.experiment_id || 581,
       experiment_version: raw.experiment_version || 'v1.0',
       strategy,
       population_weight: pop,
@@ -112,7 +112,7 @@ export function validateRemoteConfig(
       top3_pass_matches: passMatches,
       selection_limit: raw.selection_limit || 3,
       task_time_limit_seconds: raw.task_time_limit_seconds || 120,
-      benchmark_version: raw.benchmark_version || 'v1.0',
+      benchmark_version: raw.benchmark_version || 'v2.0',
       configuration_version: raw.configuration_version || 'v1.0',
       is_remote_verified: true,
     },
