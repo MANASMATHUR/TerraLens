@@ -50,13 +50,14 @@ function saveLedger() {
 }
 
 function counts() {
-  const result = Object.fromEntries(VALID_ARMS.map((arm) => [arm, { exposures: 0, submissions: 0, conversions: 0, success_conversions: 0 }]));
+  const result = Object.fromEntries(VALID_ARMS.map((arm) => [arm, { exposures: 0, submissions: 0, conversions: 0, success_conversions: 0, abandoned: 0 }]));
   for (const entry of ledger.entries) {
     if (!result[entry.arm]) continue;
     result[entry.arm].exposures += entry.exposure_recorded ? 1 : 0;
     result[entry.arm].submissions += entry.submission_recorded ? 1 : 0;
     result[entry.arm].conversions += entry.primary_conversion_recorded ? 1 : 0;
     result[entry.arm].success_conversions += entry.success_conversion_recorded ? 1 : 0;
+    result[entry.arm].abandoned += entry.abandoned ? 1 : 0;
   }
   return result;
 }
@@ -66,7 +67,7 @@ function report(label) {
   console.log(`${label} — local simulator progress only; Flagsmith dashboard is the experiment result source.`);
   for (const arm of VALID_ARMS) {
     const row = totals[arm];
-    console.log(`${arm}: exposures=${row.exposures}, submissions=${row.submissions}, primary_conversions=${row.conversions}, success_conversions=${row.success_conversions}`);
+    console.log(`${arm}: exposures=${row.exposures}, submissions=${row.submissions}, primary_conversions=${row.conversions}, success_conversions=${row.success_conversions}, abandoned_expired=${row.abandoned}`);
   }
   const [control, treatment] = VALID_ARMS.map((arm) => totals[arm].exposures);
   const total = control + treatment;
@@ -210,14 +211,30 @@ async function postJson(route, payload) {
   }
 }
 
-const totalsAtStart = counts();
+const nowAtStart = Date.now();
+for (const entry of ledger.entries) {
+  if (!entry.exposure_recorded || entry.submission_recorded || entry.abandoned) continue;
+  const startedAt = Date.parse(entry.session_started_at || entry.created_at || '');
+  if (!Number.isFinite(startedAt)) {
+    throw new Error(`Cannot determine session age for incomplete exposure ${entry.participantId}; refusing to retry it.`);
+  }
+  if (nowAtStart - startedAt > 128_000) {
+    entry.abandoned = true;
+    entry.abandoned_reason = 'session_window_expired';
+    entry.abandoned_at = new Date(nowAtStart).toISOString();
+  } else {
+    throw new Error(`Incomplete session ${entry.participantId} is still within its acceptance window; refusing to replay it blindly.`);
+  }
+}
+saveLedger();
+const totalsAfterReconciliation = counts();
 for (const arm of VALID_ARMS) {
-  if (totalsAtStart[arm].exposures > target) throw new Error(`Local ledger already has ${totalsAtStart[arm].exposures} ${arm} exposures, above requested target ${target}.`);
-  if (totalsAtStart[arm].exposures !== totalsAtStart[arm].submissions) {
+  if (totalsAfterReconciliation[arm].exposures > target) throw new Error(`Local ledger already has ${totalsAfterReconciliation[arm].exposures} ${arm} exposures, above requested target ${target}.`);
+  if (totalsAfterReconciliation[arm].exposures !== totalsAfterReconciliation[arm].submissions + totalsAfterReconciliation[arm].abandoned) {
     throw new Error(`Ledger has incomplete sessions for ${arm}; reconcile the previous batch before starting another run.`);
   }
 }
-if (totalsAtStart.severity_only.exposures !== totalsAtStart.spatial_impact.exposures) {
+if (totalsAfterReconciliation.severity_only.exposures !== totalsAfterReconciliation.spatial_impact.exposures) {
   throw new Error('Ledger arm counts are uneven; reconcile the previous batch before starting another run.');
 }
 
@@ -268,7 +285,7 @@ try {
       return { person, session };
     }));
 
-    await Promise.all(sessions.map(async ({ person, session }) => {
+    const submissionResults = await Promise.allSettled(sessions.map(async ({ person, session }) => {
       const decision = chooseIncidents(incidents, session.model_config, person.arm, person.participantId);
       person.persona = decision.persona;
       person.selected_incident_ids = decision.selected;
@@ -293,9 +310,15 @@ try {
       console.log(`${person.participantId} [${COHORT_LABEL}] arm=${person.arm}, persona=${person.persona}, selected=${person.selected_incident_ids.join(',')}, successful=${person.successful}, primary_conversion=${person.primary_conversion_recorded}, consequence_capture=${person.consequence_capture}`);
     }));
 
+    const submissionErrors = submissionResults.filter((result) => result.status === 'rejected');
+
     const totals = counts();
     console.log(`Batch ${batchNumber}: severity_only exposures=${totals.severity_only.exposures}, submissions=${totals.severity_only.submissions}, primary_conversions=${totals.severity_only.conversions}, success_conversions=${totals.severity_only.success_conversions}; spatial_impact exposures=${totals.spatial_impact.exposures}, submissions=${totals.spatial_impact.submissions}, primary_conversions=${totals.spatial_impact.conversions}, success_conversions=${totals.spatial_impact.success_conversions}.`);
     report('Batch complete');
+    if (submissionErrors.length) {
+      for (const failure of submissionErrors) console.error(`Submission failure: ${failure.reason instanceof Error ? failure.reason.message : String(failure.reason)}`);
+      throw new Error(`${submissionErrors.length} of ${sessions.length} submissions failed after all batch requests settled.`);
+    }
   }
 
   const finalCounts = counts();
