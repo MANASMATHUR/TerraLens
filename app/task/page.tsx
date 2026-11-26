@@ -295,9 +295,20 @@ export default function TaskPage() {
         cachedV = assignment.variant;
         if (savedRun?.variant === 'severity_only' || savedRun?.variant === 'spatial_impact') cachedV = savedRun.variant;
         resolvedConfig = assignment.remoteConfig ?? null;
+        if (cachedV === null) {
+          setVariant('severity_only');
+          setControlState('unassigned');
+          setIsLoading(false);
+          return;
+        }
         setCachedVariant(cachedV);
       }
 
+      if (cachedV === null) {
+        setVariant('severity_only');
+        setControlState('unassigned');
+        return;
+      }
       setVariant(cachedV);
       setRemoteConfig(resolvedConfig);
       setControlState(resolvedControlState);
@@ -327,11 +338,22 @@ export default function TaskPage() {
           // This is the exposure point: resolve and record only when the ranked variation is about to render.
           if (!runDegradedReason) {
             const displayed = await recordDisplayedExperiment(pid);
-            cachedV = displayed.variant;
+            const displayedVariant = displayed.variant;
+            if (displayedVariant !== 'severity_only' && displayedVariant !== 'spatial_impact') {
+              setVariant('severity_only');
+              setControlState('unassigned');
+              return;
+            }
+            cachedV = displayedVariant;
             setVariant(cachedV);
             setCachedVariant(cachedV);
           }
           setControlState('experiment_active');
+          if (cachedV === null) {
+            setVariant('severity_only');
+            setControlState('unassigned');
+            return;
+          }
           const ranked = rankIncidents(rawIncidents, cachedV, resolvedConfig ?? undefined);
           setIncidents(ranked);
         }
