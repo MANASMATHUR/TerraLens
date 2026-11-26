@@ -242,7 +242,22 @@ export default function TaskPage() {
   // Initialize participant identity, Flagsmith variant & load incidents
   useEffect(() => {
     async function setup() {
-      const pid = getOrCreateParticipantId();
+      const participantIdValue = getOrCreateParticipantId();
+      if (participantIdValue === null) {
+        setVariant('severity_only');
+        setControlState('unassigned');
+        try {
+          const response = await fetch('/api/incidents');
+          if (response.ok) {
+            const rawIncidents: IncidentWithContext[] = await response.json();
+            setIncidents(rankIncidents(rawIncidents, 'severity_only'));
+          }
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
+      const pid = participantIdValue;
       setParticipantId(pid);
       const savedRunRaw = localStorage.getItem(`terralens_run_${pid}`);
       let savedRun: any = null;
@@ -510,6 +525,7 @@ export default function TaskPage() {
       <section className="mx-auto w-full max-w-xl space-y-5 rounded-xl border border-slate-700 bg-slate-900 p-5 sm:p-8">
         <p className="font-mono text-xs uppercase tracking-widest text-sky-300">20-second tutorial</p>
         <h1 className="text-2xl font-semibold">Choose three incidents to prioritize</h1>
+        {controlState === 'unassigned' && <p role="status" className="rounded border border-amber-400 bg-amber-950 p-3 text-sm text-amber-100">State: unassigned. Showing severity-only ranking because a persistent participant ID could not be stored; experiment participation is unavailable.</p>}
         <ol className="list-decimal space-y-3 pl-5 text-sm leading-6 text-slate-300">
           <li>Use the ranked incident list or tap incident markers on the map.</li>
           <li>Review population, facility, and road-access context before choosing.</li>
@@ -519,7 +535,7 @@ export default function TaskPage() {
         {degradedReason && <p role="status" className="rounded border border-amber-400 bg-amber-950 p-3 text-sm text-amber-100">{degradedReason}</p>}
         <div className="flex items-center justify-between border-t border-slate-700 pt-4">
           <span className="font-mono text-sm text-slate-400">{tutorialSeconds > 0 ? `Start available in ${tutorialSeconds}s` : 'Tutorial complete'}</span>
-          <button onClick={handleBeginTask} disabled={tutorialSeconds > 0} className="rounded bg-sky-400 px-4 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-40">Start 2-minute task</button>
+          <button onClick={handleBeginTask} disabled={tutorialSeconds > 0 || controlState === 'unassigned'} className="rounded bg-sky-400 px-4 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-40">Start 2-minute task</button>
         </div>
       </section>
     </main>;
