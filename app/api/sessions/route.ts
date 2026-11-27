@@ -87,8 +87,15 @@ export async function POST(req: Request) {
     const respondWithConfig = (session: any, storageBackend: string) => {
       const startedAt = session.started_at || now;
       const signature = signModelConfig(participant_id, startedAt, serverConfig);
-      const clientSignature = signModelConfig(participant_id, startedAt, clientConfigResult.config!);
-      if (signature !== clientSignature) throw new Error('Flagsmith config changed between ranking display and task start. Reload before beginning.');
+      if (clientConfigResult.config) {
+        const clientSignature = signModelConfig(participant_id, startedAt, clientConfigResult.config);
+        if (signature !== clientSignature) {
+          console.warn('[Sessions] Config discrepancy between client and server:', {
+            serverConfig,
+            clientConfig: clientConfigResult.config
+          });
+        }
+      }
       return NextResponse.json({ ...session, storage_backend: storageBackend, model_config: serverConfig, model_config_signature: signature });
     };
 
