@@ -116,22 +116,23 @@ test('Benchmark top 3 is not identical to treatment top 3', (t) => {
 // Since these are TypeScript files we use a lightweight inline re-implementation
 // of the same logic so tests run under plain Node without a build step.
 
+// This mirrors lib/flagsmith/config-schema.ts because the suite runs without a build step.
 function validateRemoteConfigInline(raw, assignedVariant) {
   const VALID_VARIANTS = ['severity_only', 'spatial_impact'];
   const DEFAULTS = {
     severity_only: {
-      experiment_id: 468, experiment_version: 'v1.0', strategy: 'severity_only',
+      experiment_id: 581, experiment_version: 'v1.0', strategy: 'severity_only',
       population_weight: 0.0, facility_weight: 0.0, accessibility_weight: 0.0,
       severity_base_weight: 1.0, spatial_adjustment: 0.0,
       selection_limit: 3, task_time_limit_seconds: 120,
-      benchmark_version: 'v1.0', configuration_version: 'default_v1',
+      benchmark_version: 'v2.0', configuration_version: 'default_v1',
     },
     spatial_impact: {
-      experiment_id: 468, experiment_version: 'v1.0', strategy: 'spatial_impact',
+      experiment_id: 581, experiment_version: 'v1.0', strategy: 'spatial_impact',
       population_weight: 0.60, facility_weight: 0.30, accessibility_weight: 0.10,
       severity_base_weight: 0.55, spatial_adjustment: 0.45,
       selection_limit: 3, task_time_limit_seconds: 120,
-      benchmark_version: 'v1.0', configuration_version: 'default_v1',
+      benchmark_version: 'v2.0', configuration_version: 'default_v1',
     },
   };
 
