@@ -103,7 +103,7 @@ async function runPreflight() {
   }
 
   // WF-8: Submission and analytics persisted transactionally
-  const { getLocalSession } = await import('../lib/experiment/session-store.ts');
+  const { getLocalSession } = await import('../../lib/experiment/session-store.ts');
   const stored = getLocalSession(humanId, SCENARIO_ID);
   if (stored && stored.completed_at && stored.successful === true) {
     pass('workflow', 'WF-8_TransactionalPersistence', `Session persisted in SQLite with completed_at: ${stored.completed_at}`);
@@ -127,7 +127,7 @@ async function runPreflight() {
       upsert: async () => ({ data: {}, error: null })
     })
   };
-  const { syncLocalRecordsToSupabase } = await import('../lib/experiment/session-store.ts');
+  const { syncLocalRecordsToSupabase } = await import('../../lib/experiment/session-store.ts');
   const syncRes = await syncLocalRecordsToSupabase(mockSupabase);
   pass('workflow', 'WF-10_SyncNoDuplicates', `Sync executed cleanly (synced: ${syncRes.synced}, duplicates prevented: ${syncRes.alreadySynced})`);
 

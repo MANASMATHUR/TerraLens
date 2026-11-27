@@ -129,7 +129,7 @@ async function runVerification() {
   }
 
   // B3: Local SQLite stores assignment metadata
-  const { getLocalSession } = await import('../lib/experiment/session-store.ts');
+  const { getLocalSession } = await import('../../lib/experiment/session-store.ts');
   const storedSess = getLocalSession(clientPid, SCENARIO_ID);
   if (storedSess && storedSess.assignment_source === assignmentSource) {
     pass('sectionB', 'B3_SQLitePreservesSource', `SQLite verified: assignment_source=${storedSess.assignment_source}, flagsmith_exposure=${storedSess.flagsmith_exposure_recorded}`);
@@ -166,7 +166,7 @@ async function runVerification() {
   // C2: Exceeded duration (>128s) rejected
   const latePid = `timer_late_${randomUUID()}`;
   const pastTime = new Date(Date.now() - 140000).toISOString(); // 140 seconds ago
-  const { saveLocalSession } = await import('../lib/experiment/session-store.ts');
+  const { saveLocalSession } = await import('../../lib/experiment/session-store.ts');
   saveLocalSession({
     id: latePid,
     participant_id: latePid,

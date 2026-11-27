@@ -49,7 +49,7 @@ async function runRecoverySimulation() {
     saveLocalSession,
     getLocalSession,
     syncLocalRecordsToSupabase
-  } = await import('../lib/experiment/session-store.ts');
+  } = await import('../../lib/experiment/session-store.ts');
 
   console.log('[Step 1] Creating initial pre-outage sessions in local SQLite...');
   const pidOnline = 'audit_usr_online_001';
