@@ -25,6 +25,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing participant_id or variant' }, { status: 400 });
     }
 
+    if (process.env.NODE_ENV === 'production' && !/^(qa_sim|demo|pilot)_/.test(participant_id)) {
+      return NextResponse.json({ error: 'Production sessions require a qa_sim_, demo_, or pilot_ participant_id.' }, { status: 403 });
+    }
+
     const isSimulated = participant_id.startsWith('qa_sim_');
     if (body.is_simulated === true && !isSimulated) {
       return NextResponse.json({ error: 'Simulated sessions require a qa_sim_ participant_id.' }, { status: 400 });
