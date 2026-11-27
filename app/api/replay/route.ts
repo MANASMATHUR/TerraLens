@@ -36,6 +36,8 @@ export async function GET() {
       const spaRank = spatialSorted.findIndex((d) => d.id === inc.id) + 1;
       const delta = sevRank - spaRank; // positive = promoted in priority, negative = demoted
 
+      const isPopCapped = (inc.context.population_exposed || 0) >= 38000;
+
       return {
         id: inc.id,
         title: inc.title,
@@ -47,6 +49,7 @@ export async function GET() {
         spatial_rank: spaRank,
         rank_delta: delta, // > 0 means moved UP under spatial
         population_exposed: inc.context.population_exposed,
+        population_capped: isPopCapped,
         hospital_count: inc.context.hospital_count,
         fire_station_count: inc.context.fire_station_count,
         nearest_road_m: inc.context.nearest_road_distance_m,
@@ -69,6 +72,8 @@ export async function GET() {
     const totalHospsControlTop3 = controlTop3Details.reduce((sum: number, c: any) => sum + (c?.hospital_count || 0), 0);
     const totalHospsTreatmentTop3 = treatmentTop3Details.reduce((sum: number, c: any) => sum + (c?.hospital_count || 0), 0);
 
+    const cappedIncidentsCount = comparison.filter((c: any) => c.population_capped).length;
+
     return NextResponse.json({
       incidents: comparison,
       summary: {
@@ -78,6 +83,8 @@ export async function GET() {
         treatment_estimated_population_exposure: totalPopTreatmentTop3,
         control_hospitals_covered: totalHospsControlTop3,
         treatment_hospitals_covered: totalHospsTreatmentTop3,
+        capped_incidents: cappedIncidentsCount,
+        population_total_is_capped: true,
       },
     });
   } catch (err) {

@@ -15,6 +15,7 @@ interface ReplayIncident {
   spatial_rank: number;
   rank_delta: number;
   population_exposed: number;
+  population_capped?: boolean;
   hospital_count: number;
   fire_station_count: number;
   nearest_road_m: number;
@@ -30,6 +31,8 @@ interface ReplaySummary {
   treatment_estimated_population_exposure: number;
   control_hospitals_covered: number;
   treatment_hospitals_covered: number;
+  capped_incidents?: number;
+  population_total_is_capped?: boolean;
 }
 
 export default function DecisionReplayPage() {
@@ -103,56 +106,61 @@ export default function DecisionReplayPage() {
         </div>
 
         {/* Top-3 Strategy Outcome Comparison */}
-        <section aria-label="Top 3 Strategy Comparison" className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="border border-slate-200 bg-white rounded p-5 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <h2 className="text-sm font-semibold text-slate-900">
-                Variant A: Severity-only Top 3
-              </h2>
-              <span className="text-xs font-mono text-amber-700">
-                IDs: {summary.control_top_3.map((id) => `#${id}`).join(', ')}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <div className="text-xs text-slate-500">Estimated Population Exposed</div>
-                <div className="text-lg font-mono font-semibold text-slate-900">
-                  {summary.control_estimated_population_exposure.toLocaleString()} people
+        <section aria-label="Top 3 Strategy Comparison" className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="border border-slate-200 bg-white rounded p-5 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Variant A: Severity-only Top 3
+                </h2>
+                <span className="text-xs font-mono text-amber-700">
+                  IDs: {summary.control_top_3.map((id) => `#${id}`).join(', ')}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <div className="text-xs text-slate-500">Estimated Population Exposed</div>
+                  <div className="text-lg font-mono font-semibold text-slate-900">
+                    {summary.control_estimated_population_exposure.toLocaleString()} people
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Hospitals in Impact Zones</div>
+                  <div className="text-lg font-mono font-semibold text-slate-900">
+                    {summary.control_hospitals_covered} facilities
+                  </div>
                 </div>
               </div>
-              <div>
-                <div className="text-xs text-slate-500">Hospitals in Impact Zones</div>
-                <div className="text-lg font-mono font-semibold text-slate-900">
-                  {summary.control_hospitals_covered} facilities
-                </div>
-              </div>
             </div>
-          </div>
 
-          <div className="border border-slate-200 bg-white rounded p-5 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <h2 className="text-sm font-semibold text-slate-900">
-                Variant B: Spatial-impact Top 3
-              </h2>
-              <span className="text-xs font-mono text-sky-700">
-                IDs: {summary.treatment_top_3.map((id) => `#${id}`).join(', ')}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <div className="text-xs text-slate-500">Estimated Population Exposed</div>
-                <div className="text-lg font-mono font-semibold text-sky-700">
-                  {summary.treatment_estimated_population_exposure.toLocaleString()} people
-                </div>
+            <div className="border border-slate-200 bg-white rounded p-5 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Variant B: Spatial-impact Top 3
+                </h2>
+                <span className="text-xs font-mono text-sky-700">
+                  IDs: {summary.treatment_top_3.map((id) => `#${id}`).join(', ')}
+                </span>
               </div>
-              <div>
-                <div className="text-xs text-slate-500">Hospitals in Impact Zones</div>
-                <div className="text-lg font-mono font-semibold text-sky-700">
-                  {summary.treatment_hospitals_covered} facilities
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <div className="text-xs text-slate-500">Estimated Population Exposed</div>
+                  <div className="text-lg font-mono font-semibold text-sky-700">
+                    {summary.treatment_estimated_population_exposure.toLocaleString()} people
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Hospitals in Impact Zones</div>
+                  <div className="text-lg font-mono font-semibold text-sky-700">
+                    {summary.treatment_hospitals_covered} facilities
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+          <p className="text-xs text-slate-500 italic">
+            Population figures are capped at 38,000 per incident; the totals are sums of capped values.
+          </p>
         </section>
 
         {/* Main Comparison Table + Selected Incident Explanation */}
@@ -248,7 +256,7 @@ export default function DecisionReplayPage() {
                             : '0'}
                         </td>
                         <td className="py-2.5 px-4 text-right font-mono text-slate-700">
-                          {inc.population_exposed.toLocaleString()}
+                          {inc.population_capped ? '38,000 (capped)' : inc.population_exposed.toLocaleString()}
                         </td>
                       </tr>
                     );
