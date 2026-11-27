@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+const CACHE_TTL_MS = 300 * 1000;
+const analyticsCache = new Map<string, { payload: Record<string, unknown>; expiresAt: number }>();
+
 async function readJson(response: Response): Promise<unknown> {
   return response.json().catch(() => null);
 }
@@ -19,6 +22,11 @@ export async function GET() {
       api_answered: false,
       error: 'Missing NEXT_PUBLIC_FLAGSMITH_ENVIRONMENT_KEY, FLAGSMITH_MASTER_API_KEY, or FLAGSMITH_EXPERIMENT_ID.',
     }, { status: 503 });
+  }
+
+  const cachedEntry = analyticsCache.get(experimentId);
+  if (cachedEntry && cachedEntry.expiresAt > Date.now()) {
+    return NextResponse.json({ ...cachedEntry.payload, cached: true });
   }
 
   const base = `https://api.flagsmith.com/api/v1/environments/${encodeURIComponent(environmentKey)}/experiments/${encodeURIComponent(experimentId)}`;
@@ -62,7 +70,7 @@ export async function GET() {
     );
     if (resultsResponse.ok && !validResult) errors.results_schema = 'Response did not match the documented ExperimentResults fields.';
 
-    return NextResponse.json({
+    const payload: Record<string, unknown> = {
       source: 'flagsmith_management_api',
       cohort_label: 'scripted QA operators, simulated',
       cohort_note: 'Flagsmith reports experiment-wide totals; earlier setup QA exposures are included in the same aggregate.',
@@ -79,7 +87,13 @@ export async function GET() {
         metrics: experiment.metrics,
       } : null,
       errors: Object.keys(errors).length ? errors : null,
-    });
+    };
+
+    if (resultsResponse.ok && Object.keys(errors).length === 0) {
+      analyticsCache.set(experimentId, { payload, expiresAt: Date.now() + CACHE_TTL_MS });
+    }
+
+    return NextResponse.json({ ...payload, cached: false });
   } catch (error) {
     return NextResponse.json({
       source: 'flagsmith_management_api',
