@@ -36,8 +36,8 @@
 | Operator Triage Workspace (`/task`) | Flagsmith Bayesian Analytics (`/analytics`) |
 | :---: | :---: |
 | ![Operator Workspace](docs/screenshots/workspace.png) | ![Analytics Dashboard](docs/screenshots/analytics.png) |
-| **Strategy Comparison Replay (`/replay`)** | **Flagsmith Experiment Dashboard** |
-| ![Decision Replay](docs/screenshots/replay.png) | ![Flagsmith Experiment 581 (add screenshot)](docs/screenshots/flagsmith-experiment.png) |
+| **Strategy Comparison Replay (`/replay`)** | **Landing Overview (`/`)** |
+| ![Decision Replay](docs/screenshots/replay.png) | ![Landing Overview](docs/screenshots/landing.png) |
 
 ---
 
@@ -54,42 +54,42 @@ During a storm, municipal control rooms frequently triage queues ordered by engi
 ```mermaid
 flowchart LR
   subgraph Browser
-    A[Operator UI<br/>/task, MapLibre]
-    B[Analytics page<br/>/analytics]
+    A["Operator UI<br/>/task, MapLibre"]
+    B["Analytics page<br/>/analytics"]
   end
-  subgraph Next on Vercel
-    C[/api/sessions/]
-    D[/api/submissions/]
-    E[/api/analytics/]
-    F[/api/replay/]
+  subgraph Next_on_Vercel["Next.js on Vercel"]
+    C["/api/sessions/"]
+    D["/api/submissions/"]
+    E["/api/analytics/"]
+    F["/api/replay/"]
   end
   subgraph Flagsmith
-    G[Multivariate flag<br/>incident_prioritization_strategy]
-    H[Remote config<br/>scoring weights]
-    I[Experiment 581<br/>metrics 582/446/583]
-    J[Warehouse connection]
+    G["Multivariate flag<br/>incident_prioritization_strategy"]
+    H["Remote config<br/>scoring weights"]
+    I["Experiment 581<br/>metrics 582/446/583"]
+    J["Warehouse connection"]
   end
-  K[(Supabase Postgres)]
-  A -->|identify + getExperimentFlag| G
+  K[("Supabase Postgres")]
+  A -->|"identify + getExperimentFlag"| G
   A --> C
   A --> D
-  C -->|getIdentityFlags verifies arm| G
+  C -->|"getIdentityFlags verifies arm"| G
   D -->|trackEvent| I
   C --> K
   D --> K
   B --> E
-  E -->|Management API| I
+  E -->|"Management API"| I
   I --> J
-  F -->|server-side ranking| A
+  F -->|"server-side ranking"| A
 ```
 
 ```mermaid
 flowchart LR
-  U[User] --> V[Vercel<br/>Next.js 15]
-  V -->|server env only| API[Flagsmith Management API]
-  V -->|client + server SDK keys| SDK[Flagsmith edge + events]
-  V -->|service role| SB[(Supabase Postgres)]
-  V -.->|local only| L[(SQLite .data)]
+  U["User"] --> V["Vercel<br/>Next.js 15"]
+  V -->|"server env only"| API["Flagsmith Management API"]
+  V -->|"client + server SDK keys"| SDK["Flagsmith edge + events"]
+  V -->|"service role"| SB[("Supabase Postgres")]
+  V -.->|"local only"| L[("SQLite .data")]
 ```
 
 ---
@@ -135,13 +135,13 @@ stateDiagram-v2
 
 ```mermaid
 flowchart TD
-  S[Submit three picks] --> C[Server computes consequence capture<br/>picked mean / benchmark top-3 mean]
-  C --> V[value in 0..1]
-  V --> M[Metric 582 priority_task_submitted<br/>Mean]
-  S --> O[At least 2 of 3 in benchmark top-3]
-  O --> N[Metric 446 priority_task_success<br/>Occurrence]
-  S --> T[Server clock elapsed]
-  T --> G[Metric 583 task_duration_seconds<br/>guardrail, uninformative for the scripted cohort]
+  S["Submit three picks"] --> C["Server computes consequence capture<br/>picked mean / benchmark top-3 mean"]
+  C --> V["value in 0..1"]
+  V --> M["Metric 582 priority_task_submitted<br/>Mean"]
+  S --> O["At least 2 of 3 in benchmark top-3"]
+  O --> N["Metric 446 priority_task_success<br/>Occurrence"]
+  S --> T["Server clock elapsed"]
+  T --> G["Metric 583 task_duration_seconds<br/>guardrail, uninformative for the scripted cohort"]
 ```
 
 ---
