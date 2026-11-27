@@ -50,7 +50,7 @@ With the app running and `.env.local` configured, run the 10-session dry run fir
 npm run simulate -- --dry-run
 ```
 
-Refresh experiment 581 in the Flagsmith dashboard and verify five new exposures on each arm and nonzero primary conversion events before proceeding. The recorded run holds **53 and 47 exposures** (**41 and 42 evaluated** in Flagsmith's warehouse), and stopped at 100 total sessions to preserve the audited cohort without inflating warehouse ingestion lag:
+Refresh experiment 581 in the Flagsmith dashboard and verify five new exposures on each arm and nonzero primary conversion events before proceeding. The recorded run produced **83 Flagsmith-evaluated identities** (41 Control / 42 Variant_1 per `/results/`); local SQLite logged 53 and 47 rows. The run stopped at 100 local sessions; Flagsmith's warehouse ingested 83 of those through its batch pipeline:
 
 ```powershell
 npm run simulate -- --target-per-arm 50
@@ -58,7 +58,7 @@ npm run simulate -- --target-per-arm 50
 
 The script batches ten sessions, logs Flagsmith-assigned exposures, submissions, primary conversion-event dispatches, and success-event dispatches per arm, and exits nonzero if the split drifts beyond 10%. Counts in the script log are execution diagnostics. Quote experiment measurements only from Flagsmith after refreshing the dashboard.
 
-**Cohort: 53 and 47 exposures (41 and 42 evaluated in Flagsmith's warehouse), scripted QA sessions, simulated personas; not human behaviour.**
+**Cohort: 83 Flagsmith-evaluated identities (41 Control / 42 Variant_1); 53 and 47 local SQLite rows, scripted QA sessions, simulated personas; not human behaviour.**
 
 ## How I used Flagsmith
 
@@ -85,15 +85,14 @@ When the results value is null, the page shows the Flagsmith exposure count and 
 
 | Cohort / Source | Scope | Control (`severity_only`) | Treatment (`spatial_impact`) | Total | Role & Definition |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Flagsmith Exposures** | Remote API (`/exposures/`) | **53** | **47** | **100** | Total unique participant identities assigned and exposed in Experiment 581. |
-| **Flagsmith Warehouse Evaluated** | Remote API (`/results/`) | **41** | **42** | **83** | Identities whose submission events have completed pipeline ingestion and aggregation. |
-| **Local SQLite Cohort** | `.data/terralens_local.db` | **53** (50 completed) | **47** (45 completed) | **100** | Full audited historical simulation run, including sessions before warehouse batch sync. |
+| **Flagsmith experiment 581** | Remote API (`/exposures/` and `/results/`) | **41** | **42** | **83** | Unique identities both exposed and evaluated in Flagsmith's warehouse. The same 83 identities appear in both endpoints; Flagsmith's warehouse reports a single ingested count. |
+| **Local SQLite audit** | `.data/terralens_local.db` | **53** (50 completed) | **47** (45 completed) | **100** | Local audit log only, not an experiment result. Includes sessions before warehouse batch sync completed. |
 
 ### Live Flagsmith Experiment Results (Experiment 581)
 
 Queried live from the Flagsmith Management API (`https://api.flagsmith.com/api/v1/environments/K3ygrnRrsFzbbuh8K7NUcy/experiments/581/results/`):
 
-- **Evaluated Identities (`n`):** 41 Control vs. 42 Variant_1 (83 evaluated)
+- **Evaluated Identities (`n`):** 41 Control vs. 42 Variant_1 (83 evaluated in Flagsmith's warehouse; source: `/results/`)
 - **Primary Metric (`priority_task_submitted`, Mean):** **0.574** Control vs. **0.844** Variant_1
   * *Methodological note: This graded increase reflects ranking fidelity by construction—confirming the spatial engine successfully surfaces high-consequence incidents to the top—while the binary arm evaluates whether operators selected them.*
 - **Secondary Metric (`priority_task_success`, Occurrence):** **14.6%** (6/41) Control vs. **26.2%** (11/42) Variant_1
@@ -112,7 +111,7 @@ Queried live from the Flagsmith Management API (`https://api.flagsmith.com/api/v
 | Baseline: 35% top-rank, 25% infrastructure, 20% population, 15% imperfect, 5% delayed | 0.6777 | 0.9754 | +0.2976 | 53 enrolled |
 | Sensitivity: 60% top-rank, 15% infrastructure, 5% population, 15% imperfect, 5% delayed | 0.6064 | 0.9600 | +0.3535 | 53 enrolled |
 
-These are expected effects from synthetic persona choices, not Flagsmith measurements, observed sessions, forecasts of human behavior, or a power guarantee. The 53-per-arm projection target includes the 50-identity reporting floor and a 5% delayed-session allowance. The recorded cohort holds 53 and 47 exposures (41 and 42 evaluated in Flagsmith's warehouse), stopped at 100 total sessions to preserve the audited cohort.
+These are expected effects from synthetic persona choices, not Flagsmith measurements, observed sessions, forecasts of human behavior, or a power guarantee. The 53-per-arm projection target includes the 50-identity reporting floor and a 5% delayed-session allowance. The recorded cohort holds 83 Flagsmith-evaluated identities (41 Control / 42 Variant_1); local SQLite logged 53 and 47 rows, stopping at 100 total local sessions.
 
 ## Limitations
 
