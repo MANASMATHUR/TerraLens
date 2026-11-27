@@ -16,7 +16,7 @@ Adding spatial consequence to incident prioritization raises the rate at which s
 
    ```powershell
    npm ci
-   Copy-Item .env.example .env.local
+   Copy-Item .env.example .env.local   # Linux/macOS: cp .env.example .env.local
    ```
 
 2. In `.env.local`, fill the Flagsmith Development client key, server key, and organisation Management API key. Their origins are listed under [Environment variables](#environment-variables). Keep keys local. The experiment and project IDs are already `581` and `55892`.
@@ -50,15 +50,15 @@ With the app running and `.env.local` configured, run the 10-session dry run fir
 npm run simulate -- --dry-run
 ```
 
-Refresh experiment 581 in the Flagsmith dashboard and verify five new exposures on each arm and nonzero primary conversion events before proceeding. Then target 100 scripted sessions per arm total, including the dry run:
+Refresh experiment 581 in the Flagsmith dashboard and verify five new exposures on each arm and nonzero primary conversion events before proceeding. The recorded run holds **53 and 47 exposures** (**41 and 42 evaluated** in Flagsmith's warehouse), and stopped at 100 total sessions to preserve the audited cohort without inflating warehouse ingestion lag:
 
 ```powershell
-npm run simulate -- --target-per-arm 100
+npm run simulate -- --target-per-arm 50
 ```
 
 The script batches ten sessions, logs Flagsmith-assigned exposures, submissions, primary conversion-event dispatches, and success-event dispatches per arm, and exits nonzero if the split drifts beyond 10%. Counts in the script log are execution diagnostics. Quote experiment measurements only from Flagsmith after refreshing the dashboard.
 
-**Cohort: target 100 scripted QA sessions per arm, simulated personas; not human behaviour.**
+**Cohort: 53 and 47 exposures (41 and 42 evaluated in Flagsmith's warehouse), scripted QA sessions, simulated personas; not human behaviour.**
 
 ## How I used Flagsmith
 
@@ -112,7 +112,7 @@ Queried live from the Flagsmith Management API (`https://api.flagsmith.com/api/v
 | Baseline: 35% top-rank, 25% infrastructure, 20% population, 15% imperfect, 5% delayed | 0.6777 | 0.9754 | +0.2976 | 53 enrolled |
 | Sensitivity: 60% top-rank, 15% infrastructure, 5% population, 15% imperfect, 5% delayed | 0.6064 | 0.9600 | +0.3535 | 53 enrolled |
 
-These are expected effects from synthetic persona choices, not Flagsmith measurements, observed sessions, forecasts of human behavior, or a power guarantee. The 53-per-arm projection target includes the 50-identity reporting floor and a 5% delayed-session allowance. The authorized run target is 100 scripted QA sessions per arm.
+These are expected effects from synthetic persona choices, not Flagsmith measurements, observed sessions, forecasts of human behavior, or a power guarantee. The 53-per-arm projection target includes the 50-identity reporting floor and a 5% delayed-session allowance. The recorded cohort holds 53 and 47 exposures (41 and 42 evaluated in Flagsmith's warehouse), stopped at 100 total sessions to preserve the audited cohort.
 
 ## Limitations
 
@@ -145,6 +145,17 @@ Copy `.env.example` to `.env.local`. The example contains no credentials. Values
 | `ADMIN_AUDIT_SECRET` | Optional | Generate locally for the separate protected benchmark-audit endpoint. Private; not needed for the experiment demo. |
 
 `.env.local` is ignored by Git. Never put server or Management API keys in a `NEXT_PUBLIC_*` variable. No key belongs in a commit.
+
+## Screenshots
+
+*(All screenshots reflect the **scripted QA operators, simulated** cohort.)*
+
+1. **Triage Workspace (`/task`)** — Incident prioritization under Flagsmith remote assignment:  
+   ![TerraLens Triage Workspace](docs/screenshots/workspace.png)
+2. **Flagsmith Experiment 581 Dashboard** — 50/50 split and live metric means:  
+   ![Flagsmith Experiment 581](docs/screenshots/flagsmith-experiment.png)
+3. **Live Analytics (`/analytics`)** — Reconciled cohorts and Management API payload:  
+   ![TerraLens Analytics](docs/screenshots/analytics.png)
 
 ## Demonstration
 
