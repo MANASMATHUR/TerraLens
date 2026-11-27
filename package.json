@@ -2,10 +2,15 @@
   "name": "terra-lens",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "node --test tests/experiment.test.mjs",
     "simulate": "node --env-file=.env.local scripts/simulate_track01_traffic.mjs",
     "benchmark:recompute": "node scripts/recompute_benchmark.mjs",
     "benchmark:project": "node scripts/project_expected_effect.mjs",
