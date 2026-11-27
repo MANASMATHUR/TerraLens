@@ -322,10 +322,12 @@ def generate():
 
     # 6. Save incidents_data.json (for Next.js API fallback)
     with open(PUBLIC_GEO_DIR / "incidents_data.json", "w") as f:
-        # Exclude hidden benchmark scores from client-facing JSON
+        # Exclude hidden benchmark scores and pre-computed ranks/scores from client-facing JSON
         client_incidents = []
         for inc in incidents_processed:
-            item_copy = {k: v for k, v in inc.items() if k != "benchmark"}
+            item_copy = {k: v for k, v in inc.items() if k not in ("benchmark", "rank_a", "rank_b", "scores")}
+            if "context" in item_copy and isinstance(item_copy["context"], dict):
+                item_copy["context"] = {k: v for k, v in item_copy["context"].items() if k != "spatial_impact_score"}
             client_incidents.append(item_copy)
         json.dump(client_incidents, f, indent=2)
     print("✓ Saved incidents_data.json (client-safe, benchmark omitted)")

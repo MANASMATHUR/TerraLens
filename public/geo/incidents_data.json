@@ -22,15 +22,8 @@
       "population_index": 1.0,
       "facility_index": 0.5,
       "accessibility_index": 0.625,
-      "composite_c": 0.8125,
-      "spatial_impact_score": 71.42
-    },
-    "scores": {
-      "score_a": 78.0,
-      "score_b": 71.42
-    },
-    "rank_a": 12,
-    "rank_b": 5
+      "composite_c": 0.8125
+    }
   },
   {
     "id": 2,
@@ -55,15 +48,8 @@
       "population_index": 1.0,
       "facility_index": 0.4,
       "accessibility_index": 0.181,
-      "composite_c": 0.7381,
-      "spatial_impact_score": 72.34
-    },
-    "scores": {
-      "score_a": 82.0,
-      "score_b": 72.34
-    },
-    "rank_a": 8,
-    "rank_b": 3
+      "composite_c": 0.7381
+    }
   },
   {
     "id": 3,
@@ -88,15 +74,8 @@
       "population_index": 1.0,
       "facility_index": 0.0,
       "accessibility_index": 0.761,
-      "composite_c": 0.6761,
-      "spatial_impact_score": 71.76
-    },
-    "scores": {
-      "score_a": 84.0,
-      "score_b": 71.76
-    },
-    "rank_a": 6,
-    "rank_b": 4
+      "composite_c": 0.6761
+    }
   },
   {
     "id": 4,
@@ -121,15 +100,8 @@
       "population_index": 0.0282,
       "facility_index": 0.0,
       "accessibility_index": 0.05,
-      "composite_c": 0.0219,
-      "spatial_impact_score": 53.75
-    },
-    "scores": {
-      "score_a": 96.0,
-      "score_b": 53.75
-    },
-    "rank_a": 1,
-    "rank_b": 18
+      "composite_c": 0.0219
+    }
   },
   {
     "id": 5,
@@ -154,15 +126,8 @@
       "population_index": 0.1361,
       "facility_index": 0.0,
       "accessibility_index": 0.929,
-      "composite_c": 0.1746,
-      "spatial_impact_score": 58.46
-    },
-    "scores": {
-      "score_a": 93.0,
-      "score_b": 58.46
-    },
-    "rank_a": 2,
-    "rank_b": 13
+      "composite_c": 0.1746
+    }
   },
   {
     "id": 6,
@@ -187,15 +152,8 @@
       "population_index": 0.1983,
       "facility_index": 0.0,
       "accessibility_index": 0.757,
-      "composite_c": 0.1947,
-      "spatial_impact_score": 56.75
-    },
-    "scores": {
-      "score_a": 89.0,
-      "score_b": 56.75
-    },
-    "rank_a": 3,
-    "rank_b": 14
+      "composite_c": 0.1947
+    }
   },
   {
     "id": 7,
@@ -220,15 +178,8 @@
       "population_index": 1.0,
       "facility_index": 1.0,
       "accessibility_index": 0.282,
-      "composite_c": 0.9282,
-      "spatial_impact_score": 73.54
-    },
-    "scores": {
-      "score_a": 76.0,
-      "score_b": 73.54
-    },
-    "rank_a": 14,
-    "rank_b": 2
+      "composite_c": 0.9282
+    }
   },
   {
     "id": 8,
@@ -253,15 +204,8 @@
       "population_index": 0.5006,
       "facility_index": 0.3,
       "accessibility_index": 0.163,
-      "composite_c": 0.4066,
-      "spatial_impact_score": 52.04
-    },
-    "scores": {
-      "score_a": 71.0,
-      "score_b": 52.04
-    },
-    "rank_a": 19,
-    "rank_b": 21
+      "composite_c": 0.4066
+    }
   },
   {
     "id": 9,
@@ -286,15 +230,8 @@
       "population_index": 0.6011,
       "facility_index": 0.4,
       "accessibility_index": 0.316,
-      "composite_c": 0.5122,
-      "spatial_impact_score": 50.73
-    },
-    "scores": {
-      "score_a": 65.0,
-      "score_b": 50.73
-    },
-    "rank_a": 23,
-    "rank_b": 22
+      "composite_c": 0.5122
+    }
   },
   {
     "id": 10,
@@ -319,15 +256,8 @@
       "population_index": 1.0,
       "facility_index": 0.6,
       "accessibility_index": 0.427,
-      "composite_c": 0.8227,
-      "spatial_impact_score": 73.62
-    },
-    "scores": {
-      "score_a": 80.0,
-      "score_b": 73.62
-    },
-    "rank_a": 10,
-    "rank_b": 1
+      "composite_c": 0.8227
+    }
   },
   {
     "id": 11,
@@ -352,15 +282,8 @@
       "population_index": 1.0,
       "facility_index": 0.3,
       "accessibility_index": 0.877,
-      "composite_c": 0.7777,
-      "spatial_impact_score": 66.6
-    },
-    "scores": {
-      "score_a": 74.0,
-      "score_b": 66.6
-    },
-    "rank_a": 17,
-    "rank_b": 9
+      "composite_c": 0.7777
+    }
   },
   {
     "id": 12,
@@ -385,15 +308,8 @@
       "population_index": 0.4402,
       "facility_index": 0.3,
       "accessibility_index": 0.522,
-      "composite_c": 0.4063,
-      "spatial_impact_score": 49.83
-    },
-    "scores": {
-      "score_a": 68.0,
-      "score_b": 49.83
-    },
-    "rank_a": 22,
-    "rank_b": 23
+      "composite_c": 0.4063
+    }
   },
   {
     "id": 13,
@@ -418,15 +334,8 @@
       "population_index": 1.0,
       "facility_index": 0.3,
       "accessibility_index": 0.061,
-      "composite_c": 0.6961,
-      "spatial_impact_score": 68.2
-    },
-    "scores": {
-      "score_a": 79.0,
-      "score_b": 68.2
-    },
-    "rank_a": 11,
-    "rank_b": 8
+      "composite_c": 0.6961
+    }
   },
   {
     "id": 14,
@@ -451,15 +360,8 @@
       "population_index": 0.7005,
       "facility_index": 0.1,
       "accessibility_index": 0.276,
-      "composite_c": 0.4779,
-      "spatial_impact_score": 55.85
-    },
-    "scores": {
-      "score_a": 73.0,
-      "score_b": 55.85
-    },
-    "rank_a": 18,
-    "rank_b": 15
+      "composite_c": 0.4779
+    }
   },
   {
     "id": 15,
@@ -484,15 +386,8 @@
       "population_index": 0.9353,
       "facility_index": 0.0,
       "accessibility_index": 0.947,
-      "composite_c": 0.6559,
-      "spatial_impact_score": 68.46
-    },
-    "scores": {
-      "score_a": 81.0,
-      "score_b": 68.46
-    },
-    "rank_a": 9,
-    "rank_b": 6
+      "composite_c": 0.6559
+    }
   },
   {
     "id": 16,
@@ -517,15 +412,8 @@
       "population_index": 1.0,
       "facility_index": 0.2,
       "accessibility_index": 0.871,
-      "composite_c": 0.7471,
-      "spatial_impact_score": 68.24
-    },
-    "scores": {
-      "score_a": 77.0,
-      "score_b": 68.24
-    },
-    "rank_a": 13,
-    "rank_b": 7
+      "composite_c": 0.7471
+    }
   },
   {
     "id": 17,
@@ -550,15 +438,8 @@
       "population_index": 0.7167,
       "facility_index": 0.0,
       "accessibility_index": 0.275,
-      "composite_c": 0.4575,
-      "spatial_impact_score": 52.91
-    },
-    "scores": {
-      "score_a": 70.0,
-      "score_b": 52.91
-    },
-    "rank_a": 20,
-    "rank_b": 19
+      "composite_c": 0.4575
+    }
   },
   {
     "id": 18,
@@ -583,15 +464,8 @@
       "population_index": 1.0,
       "facility_index": 0.0,
       "accessibility_index": 0.758,
-      "composite_c": 0.6758,
-      "spatial_impact_score": 64.06
-    },
-    "scores": {
-      "score_a": 75.0,
-      "score_b": 64.06
-    },
-    "rank_a": 16,
-    "rank_b": 11
+      "composite_c": 0.6758
+    }
   },
   {
     "id": 19,
@@ -616,15 +490,8 @@
       "population_index": 0.5324,
       "facility_index": 0.0,
       "accessibility_index": 0.322,
-      "composite_c": 0.3517,
-      "spatial_impact_score": 58.78
-    },
-    "scores": {
-      "score_a": 83.0,
-      "score_b": 58.78
-    },
-    "rank_a": 7,
-    "rank_b": 12
+      "composite_c": 0.3517
+    }
   },
   {
     "id": 20,
@@ -649,15 +516,8 @@
       "population_index": 0.9835,
       "facility_index": 0.3,
       "accessibility_index": 0.557,
-      "composite_c": 0.7358,
-      "spatial_impact_score": 55.51
-    },
-    "scores": {
-      "score_a": 63.0,
-      "score_b": 55.51
-    },
-    "rank_a": 24,
-    "rank_b": 16
+      "composite_c": 0.7358
+    }
   },
   {
     "id": 21,
@@ -682,15 +542,8 @@
       "population_index": 1.0,
       "facility_index": 0.2,
       "accessibility_index": 0.119,
-      "composite_c": 0.6719,
-      "spatial_impact_score": 64.78
-    },
-    "scores": {
-      "score_a": 76.0,
-      "score_b": 64.78
-    },
-    "rank_a": 15,
-    "rank_b": 10
+      "composite_c": 0.6719
+    }
   },
   {
     "id": 22,
@@ -715,15 +568,8 @@
       "population_index": 0.0878,
       "facility_index": 0.0,
       "accessibility_index": 0.552,
-      "composite_c": 0.1079,
-      "spatial_impact_score": 52.67
-    },
-    "scores": {
-      "score_a": 88.0,
-      "score_b": 52.67
-    },
-    "rank_a": 4,
-    "rank_b": 20
+      "composite_c": 0.1079
+    }
   },
   {
     "id": 23,
@@ -748,15 +594,8 @@
       "population_index": 0.2913,
       "facility_index": 0.0,
       "accessibility_index": 0.083,
-      "composite_c": 0.1831,
-      "spatial_impact_score": 54.38
-    },
-    "scores": {
-      "score_a": 86.0,
-      "score_b": 54.38
-    },
-    "rank_a": 5,
-    "rank_b": 17
+      "composite_c": 0.1831
+    }
   },
   {
     "id": 24,
@@ -781,15 +620,8 @@
       "population_index": 0.0616,
       "facility_index": 0.0,
       "accessibility_index": 0.314,
-      "composite_c": 0.0684,
-      "spatial_impact_score": 40.07
-    },
-    "scores": {
-      "score_a": 69.0,
-      "score_b": 40.07
-    },
-    "rank_a": 21,
-    "rank_b": 24
+      "composite_c": 0.0684
+    }
   },
   {
     "id": 25,
@@ -814,14 +646,7 @@
       "population_index": 0.0852,
       "facility_index": 0.0,
       "accessibility_index": 0.278,
-      "composite_c": 0.0789,
-      "spatial_impact_score": 36.3
-    },
-    "scores": {
-      "score_a": 62.0,
-      "score_b": 36.3
-    },
-    "rank_a": 25,
-    "rank_b": 25
+      "composite_c": 0.0789
+    }
   }
 ]
