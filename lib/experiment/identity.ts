@@ -18,11 +18,12 @@ export function getOrCreateParticipantId(): string | null {
     ?.slice(PARTICIPANT_KEY.length + 1);
   let id = localStorage.getItem(PARTICIPANT_KEY) || cookieId || null;
   if (!id) {
-    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-      id = crypto.randomUUID();
-    } else {
-      id = 'usr_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
-    }
+    const rawUuid = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+    id = `demo_${rawUuid}`;
+  } else if (!/^(qa_sim|demo|pilot)_/.test(id)) {
+    id = `demo_${id.replace(/^usr_/, '')}`;
   }
   localStorage.setItem(PARTICIPANT_KEY, id);
   document.cookie = `${PARTICIPANT_KEY}=${encodeURIComponent(id)}; Max-Age=${COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
