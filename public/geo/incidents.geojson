@@ -14,11 +14,7 @@
         "population_exposed": 38000,
         "hospital_count": 1,
         "fire_station_count": 0,
-        "school_count": 2,
-        "rank_a": 12,
-        "score_a": 78.0,
-        "rank_b": 5,
-        "score_b": 71.42
+        "school_count": 2
       },
       "geometry": {
         "type": "Point",
@@ -41,11 +37,7 @@
         "population_exposed": 38000,
         "hospital_count": 1,
         "fire_station_count": 0,
-        "school_count": 1,
-        "rank_a": 8,
-        "score_a": 82.0,
-        "rank_b": 3,
-        "score_b": 72.34
+        "school_count": 1
       },
       "geometry": {
         "type": "Point",
@@ -68,11 +60,7 @@
         "population_exposed": 38000,
         "hospital_count": 0,
         "fire_station_count": 0,
-        "school_count": 0,
-        "rank_a": 6,
-        "score_a": 84.0,
-        "rank_b": 4,
-        "score_b": 71.76
+        "school_count": 0
       },
       "geometry": {
         "type": "Point",
@@ -95,11 +83,7 @@
         "population_exposed": 903,
         "hospital_count": 0,
         "fire_station_count": 0,
-        "school_count": 0,
-        "rank_a": 1,
-        "score_a": 96.0,
-        "rank_b": 18,
-        "score_b": 53.75
+        "school_count": 0
       },
       "geometry": {
         "type": "Point",
@@ -122,11 +106,7 @@
         "population_exposed": 4355,
         "hospital_count": 0,
         "fire_station_count": 0,
-        "school_count": 0,
-        "rank_a": 2,
-        "score_a": 93.0,
-        "rank_b": 13,
-        "score_b": 58.46
+        "school_count": 0
       },
       "geometry": {
         "type": "Point",
@@ -149,11 +129,7 @@
         "population_exposed": 6346,
         "hospital_count": 0,
         "fire_station_count": 0,
-        "school_count": 0,
-        "rank_a": 3,
-        "score_a": 89.0,
-        "rank_b": 14,
-        "score_b": 56.75
+        "school_count": 0
       },
       "geometry": {
         "type": "Point",
@@ -176,11 +152,7 @@
         "population_exposed": 38000,
         "hospital_count": 3,
         "fire_station_count": 1,
-        "school_count": 1,
-        "rank_a": 14,
-        "score_a": 76.0,
-        "rank_b": 2,
-        "score_b": 73.54
+        "school_count": 1
       },
       "geometry": {
         "type": "Point",
@@ -203,11 +175,7 @@
         "population_exposed": 16018,
         "hospital_count": 1,
         "fire_station_count": 0,
-        "school_count": 0,
-        "rank_a": 19,
-        "score_a": 71.0,
-        "rank_b": 21,
-        "score_b": 52.04
+        "school_count": 0
       },
       "geometry": {
         "type": "Point",
@@ -230,11 +198,7 @@
         "population_exposed": 19234,
         "hospital_count": 1,
         "fire_station_count": 0,
-        "school_count": 1,
-        "rank_a": 23,
-        "score_a": 65.0,
-        "rank_b": 22,
-        "score_b": 50.73
+        "school_count": 1
       },
       "geometry": {
         "type": "Point",
@@ -257,11 +221,7 @@
         "population_exposed": 38000,
         "hospital_count": 1,
         "fire_station_count": 1,
-        "school_count": 1,
-        "rank_a": 10,
-        "score_a": 80.0,
-        "rank_b": 1,
-        "score_b": 73.62
+        "school_count": 1
       },
       "geometry": {
         "type": "Point",
@@ -284,11 +244,7 @@
         "population_exposed": 34114,
         "hospital_count": 0,
         "fire_station_count": 1,
-        "school_count": 1,
-        "rank_a": 17,
-        "score_a": 74.0,
-        "rank_b": 9,
-        "score_b": 66.6
+        "school_count": 1
       },
       "geometry": {
         "type": "Point",
@@ -311,11 +267,7 @@
         "population_exposed": 14087,
         "hospital_count": 1,
         "fire_station_count": 0,
-        "school_count": 0,
-        "rank_a": 22,
-        "score_a": 68.0,
-        "rank_b": 23,
-        "score_b": 49.83
+        "school_count": 0
       },
       "geometry": {
         "type": "Point",
@@ -338,11 +290,7 @@
         "population_exposed": 32289,
         "hospital_count": 0,
         "fire_station_count": 1,
-        "school_count": 1,
-        "rank_a": 11,
-        "score_a": 79.0,
-        "rank_b": 8,
-        "score_b": 68.2
+        "school_count": 1
       },
       "geometry": {
         "type": "Point",
@@ -365,11 +313,7 @@
         "population_exposed": 22417,
         "hospital_count": 0,
         "fire_station_count": 0,
-        "school_count": 1,
-        "rank_a": 18,
-        "score_a": 73.0,
-        "rank_b": 15,
-        "score_b": 55.85
+        "school_count": 1
       },
       "geometry": {
         "type": "Point",
@@ -392,11 +336,7 @@
         "population_exposed": 29929,
         "hospital_count": 0,
         "fire_station_count": 0,
-        "school_count": 0,
-        "rank_a": 9,
-        "score_a": 81.0,
-        "rank_b": 6,
-        "score_b": 68.46
+        "school_count": 0
       },
       "geometry": {
         "type": "Point",
@@ -419,11 +359,7 @@
         "population_exposed": 38000,
         "hospital_count": 0,
         "fire_station_count": 1,
-        "school_count": 0,
-        "rank_a": 13,
-        "score_a": 77.0,
-        "rank_b": 7,
-        "score_b": 68.24
+        "school_count": 0
       },
       "geometry": {
         "type": "Point",
@@ -446,11 +382,7 @@
         "population_exposed": 22933,
         "hospital_count": 0,
         "fire_station_count": 0,
-        "school_count": 0,
-        "rank_a": 20,
-        "score_a": 70.0,
-        "rank_b": 19,
-        "score_b": 52.91
+        "school_count": 0
       },
       "geometry": {
         "type": "Point",
@@ -473,11 +405,7 @@
         "population_exposed": 38000,
         "hospital_count": 0,
         "fire_station_count": 0,
-        "school_count": 0,
-        "rank_a": 16,
-        "score_a": 75.0,
-        "rank_b": 11,
-        "score_b": 64.06
+        "school_count": 0
       },
       "geometry": {
         "type": "Point",
@@ -500,11 +428,7 @@
         "population_exposed": 17038,
         "hospital_count": 0,
         "fire_station_count": 0,
-        "school_count": 0,
-        "rank_a": 7,
-        "score_a": 83.0,
-        "rank_b": 12,
-        "score_b": 58.78
+        "school_count": 0
       },
       "geometry": {
         "type": "Point",
@@ -527,11 +451,7 @@
         "population_exposed": 31473,
         "hospital_count": 1,
         "fire_station_count": 0,
-        "school_count": 0,
-        "rank_a": 24,
-        "score_a": 63.0,
-        "rank_b": 16,
-        "score_b": 55.51
+        "school_count": 0
       },
       "geometry": {
         "type": "Point",
@@ -554,11 +474,7 @@
         "population_exposed": 38000,
         "hospital_count": 0,
         "fire_station_count": 1,
-        "school_count": 0,
-        "rank_a": 15,
-        "score_a": 76.0,
-        "rank_b": 10,
-        "score_b": 64.78
+        "school_count": 0
       },
       "geometry": {
         "type": "Point",
@@ -581,11 +497,7 @@
         "population_exposed": 2809,
         "hospital_count": 0,
         "fire_station_count": 0,
-        "school_count": 0,
-        "rank_a": 4,
-        "score_a": 88.0,
-        "rank_b": 20,
-        "score_b": 52.67
+        "school_count": 0
       },
       "geometry": {
         "type": "Point",
@@ -608,11 +520,7 @@
         "population_exposed": 9321,
         "hospital_count": 0,
         "fire_station_count": 0,
-        "school_count": 0,
-        "rank_a": 5,
-        "score_a": 86.0,
-        "rank_b": 17,
-        "score_b": 54.38
+        "school_count": 0
       },
       "geometry": {
         "type": "Point",
@@ -635,11 +543,7 @@
         "population_exposed": 1971,
         "hospital_count": 0,
         "fire_station_count": 0,
-        "school_count": 0,
-        "rank_a": 21,
-        "score_a": 69.0,
-        "rank_b": 24,
-        "score_b": 40.07
+        "school_count": 0
       },
       "geometry": {
         "type": "Point",
@@ -662,11 +566,7 @@
         "population_exposed": 2725,
         "hospital_count": 0,
         "fire_station_count": 0,
-        "school_count": 0,
-        "rank_a": 25,
-        "score_a": 62.0,
-        "rank_b": 25,
-        "score_b": 36.3
+        "school_count": 0
       },
       "geometry": {
         "type": "Point",

@@ -303,11 +303,7 @@ def generate():
                 "population_exposed": inc["context"]["population_exposed"],
                 "hospital_count": inc["context"]["hospital_count"],
                 "fire_station_count": inc["context"]["fire_station_count"],
-                "school_count": inc["context"]["school_count"],
-                "rank_a": inc["rank_a"],
-                "score_a": inc["scores"]["score_a"],
-                "rank_b": inc["rank_b"],
-                "score_b": inc["scores"]["score_b"]
+                "school_count": inc["context"]["school_count"]
             },
             "geometry": {
                 "type": "Point",
