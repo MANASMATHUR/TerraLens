@@ -13,6 +13,7 @@
 
 ## Table of Contents
 
+- [Hackathon Submission & Track Details](#hackathon-submission--track-details)
 - [Screenshots](#screenshots)
 - [What it is & The Problem](#what-it-is--the-problem)
 - [Architecture](#architecture)
@@ -27,7 +28,52 @@
 - [Limitations](#limitations)
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
-- [Demo Script Summary](#demo-script-summary)
+
+---
+
+## Hackathon Submission & Track Details
+
+### Project Details
+- **Project title:** TerraLens
+- **Which tracks are you entering?:** Track 01: Test Something Real ($2,000)
+- **GitHub repository:** [https://github.com/MANASMATHUR/TerraLens](https://github.com/MANASMATHUR/TerraLens)
+- **Live demo or deployment:** [https://terra-lens.vercel.app](https://terra-lens.vercel.app)
+- **Demo video:** [Coming Soon / Final Recording] *(under 3 minutes)*
+
+### What did you build, and what problem does it solve? Who would use it, and how does it work?
+TerraLens is a spatial incident-triage workspace for municipal emergency dispatchers and shift supervisors managing concurrent infrastructure failures (such as water main bursts, electrical feeder trips, and building collapses) during urban emergencies like the monsoon season. 
+
+Traditional municipal queue systems order incoming incidents by engineering severity alone (e.g. electrical fault magnitude). This ordering misses spatial consequences: a medium-severity fault directly adjacent to a regional trauma hospital disrupts critical life-saving care far more than a severe line trip in an empty rural field. 
+
+TerraLens integrates a synthetic Jaipur GIS layer (population density, hospital & fire station proximities, road accessibility buffers) with MapLibre. Operators review incidents, inspect consequence factors, and select three priorities within a 2-minute limit. Flagsmith acts as the central control plane:
+1. Assigns operators to either **Severity-only (Control)** or **Spatial-consequence (Treatment)** ranking via a multivariate feature flag.
+2. Serves scoring weights remotely via remote config JSON so weighting parameters can be tuned without deploying code.
+3. Serves a remote kill-switch (`incident_consequence_fallback_enabled`) if spatial datasets degrade.
+4. Enforces experiment integrity: server endpoints verify Flagsmith assignments and reject any client-side tampering.
+5. Ingests exposure and conversion telemetry into Flagsmith Experimentation via the connected warehouse.
+
+### Which parts of Flagsmith did you use?
+- **Feature flags:** Multivariate flag `incident_prioritization_strategy` (Control: `severity_only`, Keyed option `Variant_1`: `spatial_impact`).
+- **Experimentation (A/B tests):** Experiment 581 (`TerraLens: Spatial Impact vs Severity`) with 50/50 allocation across 123 evaluated identities.
+- **Remote config:** `incident_prioritization_model_config` dynamically serving JSON spatial scoring weights (`0.60` population, `0.30` facility, `0.10` accessibility, `mix_factor: 0.45`).
+- **Flagsmith API & SDK:** Node.js server SDK (`@flagsmith/nodejs`), client JavaScript SDK, and Flagsmith Management REST API for `/analytics`.
+- **Flagsmith Cloud & Connected Warehouse:** Pipeline connection `11688` receiving live experiment telemetry.
+
+### [Track 1] Test Something Real: Walk us through your experiment
+- **Hypothesis:** Adding spatial consequence to incident prioritization increases the rate at which operators identify and select benchmark high-consequence incidents compared with engineering severity-only ranking. Graded consequence capture serves as a manipulation check confirming the spatial engine changes incident ordering as designed.
+- **Variants behind flag:**
+  - Control (`severity_only`): Incidents ordered strictly by mechanical engineering severity.
+  - Treatment (`spatial_impact`): Incidents ordered by severity weighted with spatial consequence context ($C = 0.60 \times \text{pop} + 0.30 \times \text{facilities} + 0.10 \times \text{access}$).
+- **Traffic split:** 50% Control / 50% Treatment (`match: any`, 100% rollout) targeted across Development environment identities.
+- **Metrics tracked:**
+  - Primary Metric: `priority_task_submitted` (Type: **Mean**, Metric ID `582`). Measures server-calculated consequence capture $[0, 1]$ of selected incidents relative to the benchmark top three.
+  - Secondary Metric: `priority_task_success` (Type: **Occurrence**, Metric ID `446`). Emitted when at least 2 of 3 selected incidents match the benchmark top three.
+  - Guardrail Metric: `task_duration_seconds` (Type: **Mean**, Metric ID `583`). Server-elapsed seconds to ensure spatial context does not slow dispatch decision time.
+- **What the results showed:**
+  Flagsmith evaluated 123 unique identities in the warehouse (61 Control vs 62 `Variant_1`).
+  - **Primary Metric:** Control **0.610** vs Treatment **0.890**. **Winner declared for `Variant_1`** with **+45.8% lift**, a 95% Credible Interval of **[+22.7%, +68.8%]**, and **99.995% chance to be best**.
+  - **Secondary Metric:** Control **18.0%** (11/61) vs Treatment **35.5%** (22/62), showing **+96.8% observed lift** and **93.5% chance to be best** (directionally positive behavioral signal).
+  - **Guardrail Metric:** Control **2.61s** vs Treatment **3.67s** (scripted simulator wait latency).
 
 ---
 
