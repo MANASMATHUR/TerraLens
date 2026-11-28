@@ -132,6 +132,10 @@ export async function POST(req: Request) {
       if (!error && created) {
         return respondWithConfig(created, 'supabase');
       }
+      if (error) {
+        console.error('[Sessions] Supabase insert failed:', error);
+        return NextResponse.json({ error: `Database error: ${error.message}` }, { status: 503 });
+      }
     }
 
     // Local fallback store
