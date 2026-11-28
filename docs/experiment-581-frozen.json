@@ -1,0 +1,259 @@
+{
+  "saved_at": "2026-11-28T10:27:48.216Z",
+  "results": {
+    "results": {
+      "as_of": "2026-11-28T10:27:22.291873Z",
+      "last_error_at": null,
+      "refresh_requested_at": "2026-11-28T10:27:41.710834Z",
+      "payload": {
+        "metrics": [
+          {
+            "variants": {
+              "control": {
+                "n": 62,
+                "sum": 37.22808350842682,
+                "sum_squares": 29.129970891805858
+              },
+              "Variant_1": {
+                "n": 66,
+                "sum": 56.109526576959176,
+                "sum_squares": 55.343497137523606
+              }
+            },
+            "inference": {
+              "Variant_1": {
+                "lift": 0.4158383736494951,
+                "ci_low": 0.1765723568745521,
+                "ci_high": 0.6551043904244381,
+                "chance_to_win": 0.9996708337863736
+              }
+            },
+            "metric_id": 582,
+            "conversions_timeseries": null
+          },
+          {
+            "variants": {
+              "control": {
+                "n": 62,
+                "sum": 11,
+                "sum_squares": 11
+              },
+              "Variant_1": {
+                "n": 66,
+                "sum": 22,
+                "sum_squares": 22
+              }
+            },
+            "inference": {
+              "Variant_1": {
+                "lift": 0.8787878787878786,
+                "ci_low": -0.32447639217143054,
+                "ci_high": 2.0820521497471876,
+                "chance_to_win": 0.9238469703344694
+              }
+            },
+            "metric_id": 446,
+            "conversions_timeseries": {
+              "points": [
+                {
+                  "bucket": "2026-11-26T10:00:00+00:00",
+                  "converted_identities": {
+                    "Variant_1": 1
+                  }
+                },
+                {
+                  "bucket": "2026-11-26T11:00:00+00:00",
+                  "converted_identities": {
+                    "control": 6,
+                    "Variant_1": 10
+                  }
+                },
+                {
+                  "bucket": "2026-11-27T07:00:00+00:00",
+                  "converted_identities": {
+                    "control": 5,
+                    "Variant_1": 11
+                  }
+                }
+              ],
+              "granularity": "hour"
+            }
+          },
+          {
+            "variants": {
+              "control": {
+                "n": 62,
+                "sum": 159.47299999999998,
+                "sum_squares": 555.0522370000001
+              },
+              "Variant_1": {
+                "n": 66,
+                "sum": 269.68699999999995,
+                "sum_squares": 8906.040937
+              }
+            },
+            "inference": {
+              "Variant_1": {
+                "lift": 0.5886221073995807,
+                "ci_low": -0.46607343657793654,
+                "ci_high": 1.6433176513770977,
+                "chance_to_win": 0.1370105080706392
+              }
+            },
+            "metric_id": 583,
+            "conversions_timeseries": null
+          }
+        ],
+        "srm_p_value": null,
+        "exposures_timeseries": {
+          "points": [
+            {
+              "bucket": "2026-11-26T09:00:00+00:00",
+              "new_identities": {
+                "control": 1,
+                "Variant_1": 1
+              }
+            },
+            {
+              "bucket": "2026-11-26T10:00:00+00:00",
+              "new_identities": {
+                "Variant_1": 1
+              }
+            },
+            {
+              "bucket": "2026-11-26T11:00:00+00:00",
+              "new_identities": {
+                "control": 40,
+                "Variant_1": 40
+              }
+            },
+            {
+              "bucket": "2026-11-27T07:00:00+00:00",
+              "new_identities": {
+                "control": 20,
+                "Variant_1": 20
+              }
+            },
+            {
+              "bucket": "2026-11-27T08:00:00+00:00",
+              "new_identities": {
+                "Variant_1": 4
+              }
+            },
+            {
+              "bucket": "2026-11-27T09:00:00+00:00",
+              "new_identities": {
+                "control": 1
+              }
+            }
+          ],
+          "granularity": "hour"
+        }
+      },
+      "is_final": true
+    }
+  },
+  "exposures": {
+    "exposures": {
+      "as_of": "2026-11-27T07:49:36.498248Z",
+      "last_error_at": null,
+      "refresh_requested_at": "2026-11-27T07:49:36.364665Z",
+      "payload": {
+        "timeseries": {
+          "points": [
+            {
+              "bucket": "2026-11-26T09:00:00+00:00",
+              "new_identities": {
+                "control": 1,
+                "Variant_1": 1
+              }
+            },
+            {
+              "bucket": "2026-11-26T10:00:00+00:00",
+              "new_identities": {
+                "Variant_1": 1
+              }
+            },
+            {
+              "bucket": "2026-11-26T11:00:00+00:00",
+              "new_identities": {
+                "control": 40,
+                "Variant_1": 40
+              }
+            },
+            {
+              "bucket": "2026-11-27T07:00:00+00:00",
+              "new_identities": {
+                "control": 20,
+                "Variant_1": 20
+              }
+            }
+          ],
+          "granularity": "hour"
+        },
+        "excluded_identities": 0
+      },
+      "is_final": false
+    }
+  },
+  "experiment": {
+    "id": 581,
+    "feature": {
+      "id": 303539,
+      "name": "incident_prioritization_strategy",
+      "type": "MULTIVARIATE",
+      "initial_value": "severity_only",
+      "multivariate_options": [
+        {
+          "id": 36725,
+          "uuid": "b3b77d02-4058-4e67-8277-4427371ffb83",
+          "type": "unicode",
+          "integer_value": null,
+          "string_value": "spatial_impact",
+          "boolean_value": null,
+          "default_percentage_allocation": 0,
+          "key": "Variant_1"
+        }
+      ]
+    },
+    "name": "TerraLens: Spatial Impact vs Severity",
+    "hypothesis": "Adding spatial context to infrastructure incident prioritization improves the ability of participants to identify high-impact incidents compared with severity-only prioritization.",
+    "status": "completed",
+    "metrics": [
+      {
+        "id": 640,
+        "metric": 582,
+        "metric_name": "priority_task_submitted",
+        "aggregation": "mean",
+        "direction": "up",
+        "expected_direction": "increase",
+        "created_at": "2026-11-26T09:00:07.672947Z"
+      },
+      {
+        "id": 653,
+        "metric": 446,
+        "metric_name": "priority_task_success",
+        "aggregation": "occurrence",
+        "direction": "up",
+        "expected_direction": "increase",
+        "created_at": "2026-11-26T09:30:20.382990Z"
+      },
+      {
+        "id": 654,
+        "metric": 583,
+        "metric_name": "task_duration_seconds",
+        "aggregation": "mean",
+        "direction": "down",
+        "expected_direction": "decrease",
+        "created_at": "2026-11-26T09:30:20.706020Z"
+      }
+    ],
+    "experiment_rollout": null,
+    "created_at": "2026-11-26T09:00:07.665787Z",
+    "updated_at": "2026-11-28T10:27:22.575554Z",
+    "started_at": "2026-11-26T09:00:09.480243Z",
+    "ended_at": "2026-11-28T10:27:22.291873Z",
+    "rollout_decision": "control",
+    "rollout_variant": null
+  }
+}

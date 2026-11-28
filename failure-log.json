@@ -1,0 +1,67 @@
+{
+  "generatedAt": "2026-11-25T07:34:17.036Z",
+  "failures": [
+    {
+      "section": "S8_LOAD",
+      "test": "Heavy load test",
+      "detail": "10.0% error rate at 100 concurrent",
+      "fix": null,
+      "ts": "2026-11-25T07:34:02.372Z"
+    }
+  ],
+  "fixes": [
+    {
+      "id": "FIX-002",
+      "severity": "P1",
+      "file": "lib/experiment/session-store.ts",
+      "description": "Session store uses volatile in-memory Map; data lost on process restart",
+      "fix": "Implement SQLite-backed persistence layer (see lib/experiment/sqlite-store.ts)"
+    },
+    {
+      "id": "FIX-006",
+      "severity": "P3",
+      "file": "lib/logger.ts (new)",
+      "description": "No structured JSON logger; console.log/warn/error used without consistent fields",
+      "fix": "Create lib/logger.ts with fields: ts, level, requestId, participantId (hashed), operation, durationMs, status"
+    },
+    {
+      "id": "FIX-005",
+      "severity": "P2",
+      "file": "lib/experiment/session-store.ts",
+      "description": "No queue size limit on in-memory session store",
+      "fix": "Add MAX_LOCAL_SESSIONS=10000 with backpressure rejection"
+    }
+  ],
+  "warnings": [
+    {
+      "section": "S2_SUPABASE",
+      "test": "In-memory session store is VOLATILE",
+      "detail": "lib/experiment/session-store.ts uses a module-level Map — data lost on Next.js restart. No SQLite or file-based persistence exists. This is a P1 defect for Supabase-down scenarios.",
+      "ts": "2026-11-25T07:31:51.043Z"
+    },
+    {
+      "section": "S7_LOGGING",
+      "test": "Structured logging fields incomplete",
+      "detail": "Logs use console.warn/error but lack requestId, participantId pseudonym, operationDuration, retryCount fields. P3 — Add structured JSON logger.",
+      "ts": "2026-11-25T07:32:57.092Z"
+    },
+    {
+      "section": "S9_SECURITY",
+      "test": "Invalid UUID as participant_id accepted",
+      "detail": "HTTP 200 — server accepts non-UUID participant IDs. P3 — Consider UUID format validation",
+      "ts": "2026-11-25T07:34:10.756Z"
+    },
+    {
+      "section": "S11_RECOVERY",
+      "test": "Scenario A: Post-restart recovery",
+      "detail": "In-memory store (session-store.ts) does not survive process restart. Submission accepted in this run would be LOST if server restarts. P1 defect.",
+      "ts": "2026-11-25T07:34:16.357Z"
+    },
+    {
+      "section": "S11_RECOVERY",
+      "test": "Scenario E: Queue size limit",
+      "detail": "The in-memory session store has no configurable size limit. Under sustained load without Supabase, the store grows unbounded. P2 — Add configurable MAX_LOCAL_SESSIONS with LRU eviction or rejection.",
+      "ts": "2026-11-25T07:34:17.027Z"
+    }
+  ]
+}

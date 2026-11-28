@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-11-25T07:34:17.034Z",
+  "testMarker": "stress_test",
+  "reconciliation": {
+    "acceptedSubmissions": 57,
+    "persistedSubmissions": 57,
+    "expectedLogicalEvents": 144,
+    "locallyQueuedEvents": 142.5,
+    "successfullySynchronized": 0,
+    "rejectedEvents": 0,
+    "duplicateLogicalEvents": 0,
+    "lostAcceptedSubmissions": 0
+  },
+  "note": "All test participants use stress_test prefix. No real human data contaminated."
+}

@@ -5,6 +5,7 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { IncidentWithContext, ExperimentVariant } from '@/types';
 import { createCirclePolygon } from '@/lib/gis/geometry';
+import { showSpatialContext } from '@/lib/experiment/gate';
 import JaipurMap from '@/components/map/JaipurMap';
 
 interface LayerVisibility {
@@ -26,14 +27,15 @@ interface JaipurMapLibreProps {
   onIncidentHover?: (id: number | null) => void;
   layerVisibility?: LayerVisibility;
   populationOpacity?: number;
+  onToggleLayer?: (key: keyof LayerVisibility) => void;
 }
 
 const DEFAULT_LAYERS: LayerVisibility = {
   populationHeatmap: true,
-  hospitals: true,
-  fireStations: true,
-  schools: true,
-  roads: true,
+  hospitals: false,
+  fireStations: false,
+  schools: false,
+  roads: false,
   impactRadius: true,
   boundary: true,
 };
@@ -53,25 +55,28 @@ export default function JaipurMapLibre({
   onIncidentClick,
   onIncidentHover,
   layerVisibility = DEFAULT_LAYERS,
-  populationOpacity = 62,
+  populationOpacity = 60,
+  onToggleLayer,
 }: JaipurMapLibreProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [webglError, setWebglError] = useState(false);
-  const [legendCollapsed, setLegendCollapsed] = useState(false);
 
-  // Initialize MapLibre GL map with OpenFreeMap Dark vector style
+  // Arm colour token resolution: control is slate, treatment is cyan
+  const isTreatment = variant === 'spatial_impact';
+  const armColor = isTreatment ? '#0284C7' : '#64748B'; // cyan or slate
+  const allowSpatial = showSpatialContext(variant);
+
+  // Initialize MapLibre GL map with OpenFreeMap Positron (light vector basemap)
   useEffect(() => {
     if (!mapContainer.current || mapRef.current) return;
 
-    // Check WebGL availability before attempting MapLibre initialization
     try {
       const canvas = document.createElement('canvas');
       const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
       if (!gl) {
-        console.warn('[JaipurMapLibre] WebGL is not available on this browser/environment. Falling back to Leaflet 2D GIS.');
         setWebglError(true);
         return;
       }
@@ -83,466 +88,369 @@ export default function JaipurMapLibre({
     let map: maplibregl.Map;
     try {
       map = new maplibregl.Map({
-      container: mapContainer.current,
-      style: 'https://tiles.openfreemap.org/styles/dark',
-      center: JAIPUR_CENTER,
-      zoom: 12.2,
-      minZoom: 10,
-      maxZoom: 18,
-      maxBounds: JAIPUR_BOUNDS,
-      attributionControl: false, // Customized below
-    });
+        container: mapContainer.current,
+        style: 'https://tiles.openfreemap.org/styles/positron', // Section 1.2.1 light vector basemap
+        center: JAIPUR_CENTER,
+        zoom: 12.2,
+        minZoom: 10,
+        maxZoom: 18,
+        maxBounds: JAIPUR_BOUNDS,
+        attributionControl: false,
+      });
 
-    // Add Navigation & Scale Controls
-    map.addControl(
-      new maplibregl.NavigationControl({ showCompass: true, visualizePitch: true }),
-      'top-right'
-    );
-    map.addControl(
-      new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }),
-      'bottom-left'
-    );
-    map.addControl(
-      new maplibregl.AttributionControl({
-        compact: true,
-        customAttribution: '© OpenFreeMap © OpenStreetMap contributors',
-      }),
-      'bottom-right'
-    );
+      map.addControl(
+        new maplibregl.NavigationControl({ showCompass: true, visualizePitch: true }),
+        'top-right'
+      );
+      map.addControl(
+        new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }),
+        'bottom-left'
+      );
+      map.addControl(
+        new maplibregl.AttributionControl({
+          compact: true,
+          customAttribution: '© OpenFreeMap © OpenStreetMap',
+        }),
+        'bottom-right'
+      );
 
-    map.on('styleimagemissing', (e) => {
-      // Provide a transparent fallback image for any missing style sprite icons (e.g. OpenFreeMap wood-pattern)
-      const id = e.id;
-      if (!map.hasImage(id)) {
-        const emptyImage = {
-          width: 1,
-          height: 1,
-          data: new Uint8Array([0, 0, 0, 0]),
-        };
-        map.addImage(id, emptyImage);
-      }
-    });
-
-    map.on('load', async () => {
-      // 1. Add Jaipur Municipal Boundary Source & Layer
-      try {
-        const boundaryRes = await fetch('/geo/jaipur_boundary.geojson');
-        if (boundaryRes.ok) {
-          const boundaryData = await boundaryRes.json();
-          map.addSource('jaipur-boundary-src', {
-            type: 'geojson',
-            data: boundaryData,
-          });
-
-          map.addLayer({
-            id: 'jaipur-boundary-line',
-            type: 'line',
-            source: 'jaipur-boundary-src',
-            paint: {
-              'line-color': '#06B6D4',
-              'line-width': 1.5,
-              'line-dasharray': [4, 3],
-              'line-opacity': 0.65,
-            },
+      map.on('styleimagemissing', (e) => {
+        const id = e.id;
+        if (!map.hasImage(id)) {
+          map.addImage(id, {
+            width: 1,
+            height: 1,
+            data: new Uint8Array([0, 0, 0, 0]),
           });
         }
-      } catch (err) {
-        console.warn('Boundary layer load warning:', err);
-      }
-
-      // Synthetic population surface: adjacent cells create a continuous field without circular buffers.
-      try {
-        const hexRes = await fetch('/geo/jaipur_population_hexgrid.geojson');
-        if (hexRes.ok) {
-          const hexData = await hexRes.json();
-          map.addSource('population-hexgrid-src', {
-            type: 'geojson',
-            data: hexData,
-          });
-
-          map.addLayer({
-            id: 'population-heatmap-fill',
-            type: 'fill',
-            source: 'population-hexgrid-src',
-            paint: {
-              'fill-color': [
-                'interpolate',
-                ['linear'],
-                ['get', 'density'],
-                0.0, 'rgba(15, 23, 42, 0.00)',
-                0.08, 'rgba(31, 105, 125, 0.10)',
-                0.22, 'rgba(36, 143, 151, 0.18)',
-                0.45, 'rgba(146, 174, 117, 0.27)',
-                0.75, 'rgba(224, 194, 112, 0.36)',
-              ],
-            'fill-opacity': 0.62,
-            },
-          });
-        }
-      } catch (err) {
-        console.warn('Population hexgrid load warning:', err);
-      }
-
-      // Independently switchable facility types; source data records need field verification.
-      try {
-        const facRes = await fetch('/geo/facilities.geojson');
-        if (facRes.ok) {
-          const facData = await facRes.json();
-          map.addSource('facilities-src', {
-            type: 'geojson',
-            data: facData,
-          });
-
-          // Facility Outer Ring
-          map.addLayer({
-            id: 'facilities-halo',
-            type: 'circle',
-            source: 'facilities-src',
-            filter: ['in', ['get', 'asset_type'], ['literal', ['hospital', 'fire_station', 'school']]],
-            paint: {
-              'circle-radius': 6.5,
-              'circle-color': '#0F172A',
-              'circle-stroke-width': 1.5,
-              'circle-stroke-color': [
-                'match',
-                ['get', 'asset_type'],
-                'hospital', '#EC4899', // Magenta
-                'fire_station', '#F97316', // Orange
-                'school', '#EAB308', // Amber
-                '#94A3B8',
-              ],
-              'circle-opacity': 0.9,
-            },
-          });
-
-          // Facility Core Dot
-          map.addLayer({
-            id: 'facilities-core',
-            type: 'circle',
-            source: 'facilities-src',
-            filter: ['in', ['get', 'asset_type'], ['literal', ['hospital', 'fire_station', 'school']]],
-            paint: {
-              'circle-radius': 3.5,
-              'circle-color': [
-                'match',
-                ['get', 'asset_type'],
-                'hospital', '#EC4899',
-                'fire_station', '#F97316',
-                'school', '#EAB308',
-                '#94A3B8',
-              ],
-            },
-          });
-
-          // Facility Click Popup
-          map.on('click', 'facilities-halo', (e) => {
-            if (!e.features || !e.features[0]) return;
-            const feat = e.features[0];
-            const props = feat.properties as any;
-            const coords = (feat.geometry as any).coordinates.slice();
-
-            new maplibregl.Popup({ offset: 12, className: 'terralens-popup' })
-              .setLngLat(coords)
-              .setHTML(`
-                <div style="font-family: sans-serif; font-size: 11px; color: #0F172A; padding: 2px;">
-                  <div style="font-size: 9px; text-transform: uppercase; font-family: monospace; font-weight: bold; color: ${
-                    props.asset_type === 'hospital' ? '#DB2777' : props.asset_type === 'fire_station' ? '#EA580C' : '#CA8A04'
-                  };">
-                    ${props.asset_type.replace('_', ' ')}
-                  </div>
-                  <div style="font-weight: bold; font-size: 12px; margin-top: 2px;">${props.name}</div>
-                  ${props.capacity ? `<div style="font-size: 10px; color: #64748B; margin-top: 2px;">Bed Capacity: ${props.capacity}</div>` : ''}
-                </div>
-              `)
-              .addTo(map);
-          });
-
-          map.on('mouseenter', 'facilities-halo', () => {
-            map.getCanvas().style.cursor = 'pointer';
-          });
-          map.on('mouseleave', 'facilities-halo', () => {
-            map.getCanvas().style.cursor = '';
-          });
-        }
-      } catch (err) {
-        console.warn('Facilities load warning:', err);
-      }
-
-      // Toggle the OSM road and street line layers supplied by OpenFreeMap style.
-      const roadLayers = map.getStyle().layers.filter((layer) => /road|street|transportation/i.test(layer.id) && layer.type === 'line').map((layer) => layer.id);
-      // save ids for the visibility effect below
-      (map as maplibregl.Map & { __terraRoadLayers?: string[] }).__terraRoadLayers = roadLayers;
-
-      // Dynamic impact radius source and layers
-      map.addSource('impact-radius-src', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
       });
 
-      // Impact Radius Translucent Buffer Fill
-      map.addLayer({
-        id: 'impact-radius-fill',
-        type: 'fill',
-        source: 'impact-radius-src',
-        paint: {
-          'fill-color': 'rgba(168, 85, 247, 0.22)',
-          'fill-opacity': 0.85,
-        },
+      map.on('load', async () => {
+        // 1. Municipal Boundary
+        try {
+          const boundaryRes = await fetch('/geo/jaipur_boundary.geojson');
+          if (boundaryRes.ok) {
+            const boundaryData = await boundaryRes.json();
+            map.addSource('jaipur-boundary-src', {
+              type: 'geojson',
+              data: boundaryData,
+            });
+
+            map.addLayer({
+              id: 'jaipur-boundary-line',
+              type: 'line',
+              source: 'jaipur-boundary-src',
+              paint: {
+                'line-color': '#94A3B8',
+                'line-width': 1.5,
+                'line-dasharray': [4, 3],
+                'line-opacity': 0.6,
+              },
+            });
+          }
+        } catch {}
+
+        // 2. Synthetic population surface
+        try {
+          const hexRes = await fetch('/geo/jaipur_population_hexgrid.geojson');
+          if (hexRes.ok) {
+            const hexData = await hexRes.json();
+            map.addSource('population-hexgrid-src', {
+              type: 'geojson',
+              data: hexData,
+            });
+
+            map.addLayer({
+              id: 'population-heatmap-fill',
+              type: 'fill',
+              source: 'population-hexgrid-src',
+              paint: {
+                'fill-color': [
+                  'interpolate',
+                  ['linear'],
+                  ['get', 'population_density_norm'],
+                  0.0, 'transparent',
+                  0.1, '#F1F5F9',
+                  0.3, '#BAE6FD',
+                  0.6, '#38BDF8',
+                  0.9, '#0284C7',
+                ],
+                'fill-opacity': 0.5,
+              },
+            });
+          }
+        } catch {}
+
+        // 3. Reference Critical Facilities (Hospitals, Fire, Schools)
+        try {
+          const facRes = await fetch('/geo/facilities.geojson');
+          if (facRes.ok) {
+            const facData = await facRes.json();
+            map.addSource('facilities-src', {
+              type: 'geojson',
+              data: facData,
+            });
+
+            map.addLayer({
+              id: 'facilities-core',
+              type: 'circle',
+              source: 'facilities-src',
+              filter: ['in', ['get', 'asset_type'], ['literal', ['hospital', 'fire_station', 'school']]],
+              paint: {
+                'circle-radius': 4,
+                'circle-color': [
+                  'match',
+                  ['get', 'asset_type'],
+                  'hospital', '#E11D48',
+                  'fire_station', '#D97706',
+                  'school', '#EAB308',
+                  '#94A3B8',
+                ],
+                'circle-stroke-width': 1,
+                'circle-stroke-color': '#FFFFFF',
+              },
+            });
+          }
+        } catch {}
+
+        // 4. Impact radius fill per incident, opacity 0.08, coloured by arm (Spec 1.2.2)
+        map.addSource('impact-radius-src', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: [] },
+        });
+
+        map.addLayer({
+          id: 'impact-radius-fill',
+          type: 'fill',
+          source: 'impact-radius-src',
+          paint: {
+            'fill-color': armColor,
+            'fill-opacity': 0.08, // Spec 1.2.2: opacity 0.08
+          },
+        });
+
+        map.addLayer({
+          id: 'impact-radius-line',
+          type: 'line',
+          source: 'impact-radius-src',
+          paint: {
+            'line-color': armColor,
+            'line-width': 1.5,
+            'line-opacity': 0.4,
+          },
+        });
+
+        // 5. Incidents Points Source
+        map.addSource('incidents-src', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: [] },
+        });
+
+        // Spec 1.2.3: Glow circle radius 14 at opacity 0.18, coloured by arm
+        map.addLayer({
+          id: 'incidents-glow',
+          type: 'circle',
+          source: 'incidents-src',
+          paint: {
+            'circle-radius': 14,
+            'circle-color': armColor,
+            'circle-opacity': 0.18,
+          },
+        });
+
+        // Spec 1.2.4: Selected 11px ring, 2px stroke
+        map.addLayer({
+          id: 'incidents-selected-ring',
+          type: 'circle',
+          source: 'incidents-src',
+          filter: ['==', ['get', 'isSelected'], true],
+          paint: {
+            'circle-radius': 11,
+            'circle-color': 'transparent',
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#0EA5E9',
+          },
+        });
+
+        // Spec 1.2.4: Hover 2px --accent ring
+        map.addLayer({
+          id: 'incidents-hover-ring',
+          type: 'circle',
+          source: 'incidents-src',
+          filter: ['==', ['get', 'isHovered'], true],
+          paint: {
+            'circle-radius': 9,
+            'circle-color': 'transparent',
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#0EA5E9',
+          },
+        });
+
+        // Spec 1.2.3: Core circle radius 5 on top, same arm colour
+        map.addLayer({
+          id: 'incidents-core',
+          type: 'circle',
+          source: 'incidents-src',
+          paint: {
+            'circle-radius': 5,
+            'circle-color': armColor,
+            'circle-stroke-width': 1.5,
+            'circle-stroke-color': '#FFFFFF',
+          },
+        });
+
+        // Spec 1.2.5: Rank number as text-field on the top three only
+        map.addLayer({
+          id: 'incidents-top3-rank',
+          type: 'symbol',
+          source: 'incidents-src',
+          filter: ['<=', ['get', 'display_rank'], 3],
+          layout: {
+            'text-field': ['to-string', ['get', 'display_rank']],
+            'text-size': 10,
+            'text-offset': [0, -1.3],
+            'text-allow-overlap': true,
+          },
+          paint: {
+            'text-color': '#0F172A',
+            'text-halo-color': '#FFFFFF',
+            'text-halo-width': 2,
+          },
+        });
+
+        // Click handler
+        map.on('click', 'incidents-core', (e) => {
+          if (!e.features || !e.features[0]) return;
+          const id = Number(e.features[0].properties?.id);
+          if (!isNaN(id)) onIncidentClick(id);
+        });
+
+        // Spec 1.2.8: Hover card, 240px, anchored to the cursor
+        popupRef.current = new maplibregl.Popup({
+          closeButton: false,
+          closeOnClick: false,
+          offset: 14,
+          maxWidth: '240px',
+          className: 'terralens-hover-card',
+        });
+
+        map.on('mousemove', 'incidents-core', (e) => {
+          map.getCanvas().style.cursor = 'pointer';
+          if (!e.features || !e.features[0]) return;
+          const feat = e.features[0];
+          const props = feat.properties as any;
+          const coords = (feat.geometry as any).coordinates.slice();
+
+          const incId = Number(props.id);
+          if (onIncidentHover) onIncidentHover(incId);
+
+          const inc = incidents.find((i) => i.id === incId);
+          if (!inc) return;
+
+          // Render hover card: title, severity, rank, and only spatial fields if arm allows
+          let spatialHtml = '';
+          if (allowSpatial && inc.context) {
+            spatialHtml = `
+              <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #E2E8F0; display: grid; grid-template-columns: 1fr; gap: 3px; font-size: 11px; color: #475569;">
+                <div>Population: <strong style="color: #0F172A;">${(inc.context.population_exposed / 1000).toFixed(0)}k</strong></div>
+                <div>Hospitals in range: <strong style="color: ${inc.context.hospital_count > 0 ? '#E11D48' : '#0F172A'};">${inc.context.hospital_count}</strong></div>
+                <div>Road access: <strong style="color: #0F172A;">Deficit ${inc.context.accessibility_index.toFixed(2)}</strong></div>
+              </div>
+            `;
+          }
+
+          const cardHtml = `
+            <div style="padding: 10px; font-family: Inter, sans-serif; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 6px; box-shadow: 0 4px 12px rgba(15,23,42,0.08); width: 220px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span style="font-family: monospace; font-size: 10px; font-weight: bold; color: ${armColor};">RANK #${props.display_rank}</span>
+                <span style="font-family: monospace; font-size: 10px; color: #64748B;">SEV ${Number(props.severity_score).toFixed(0)}</span>
+              </div>
+              <div style="font-size: 12px; font-weight: 600; color: #0F172A; line-height: 1.3;">
+                ${props.title?.split(' - ')[0]}
+              </div>
+              ${spatialHtml}
+            </div>
+          `;
+
+          popupRef.current?.setLngLat(coords).setHTML(cardHtml).addTo(map);
+        });
+
+        map.on('mouseleave', 'incidents-core', () => {
+          map.getCanvas().style.cursor = '';
+          popupRef.current?.remove();
+          if (onIncidentHover) onIncidentHover(null);
+        });
+
+        setMapLoaded(true);
       });
 
-      // Impact Radius Outer Perimeter Line
-      map.addLayer({
-        id: 'impact-radius-line',
-        type: 'line',
-        source: 'impact-radius-src',
-        paint: {
-          'line-color': '#C084FC',
-          'line-width': 2,
-          'line-dasharray': [3, 2],
-          'line-opacity': 0.95,
-        },
-      });
+      mapRef.current = map;
 
-      // 6. Add Incidents Source (with optional Clustering)
-      map.addSource('incidents-src', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-        cluster: true,
-        clusterMaxZoom: 11,
-        clusterRadius: 38,
-      });
-
-      // Cluster Circle Layer
-      map.addLayer({
-        id: 'incidents-clusters',
-        type: 'circle',
-        source: 'incidents-src',
-        filter: ['has', 'point_count'],
-        paint: {
-          'circle-color': [
-            'step',
-            ['get', 'point_count'],
-            '#F59E0B', // Amber for < 5
-            5, '#F97316', // Orange for 5-9
-            10, '#EF4444', // Red for 10+
-          ],
-          'circle-radius': ['step', ['get', 'point_count'], 14, 5, 18, 10, 24],
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#FFFFFF',
-          'circle-opacity': 0.9,
-        },
-      });
-
-      // Cluster Count Text Label
-      map.addLayer({
-        id: 'incidents-cluster-count',
-        type: 'symbol',
-        source: 'incidents-src',
-        filter: ['has', 'point_count'],
-        layout: {
-          'text-field': '{point_count_abbreviated}',
-          'text-font': ['Noto Sans Regular'],
-          'text-size': 11,
-        },
-        paint: {
-          'text-color': '#FFFFFF',
-        },
-      });
-
-      // Selected Halo Ring
-      map.addLayer({
-        id: 'incidents-selected-ring',
-        type: 'circle',
-        source: 'incidents-src',
-        filter: ['!', ['has', 'point_count']],
-        paint: {
-          'circle-radius': 14,
-          'circle-color': 'transparent',
-          'circle-stroke-width': 3,
-          'circle-stroke-color': '#38BDF8',
-          'circle-stroke-opacity': [
-            'case',
-            ['get', 'isSelected'],
-            1.0,
-            0.0,
-          ],
-        },
-      });
-
-      // Active / Hovered Ring
-      map.addLayer({
-        id: 'incidents-hover-ring',
-        type: 'circle',
-        source: 'incidents-src',
-        filter: ['!', ['has', 'point_count']],
-        paint: {
-          'circle-radius': 11,
-          'circle-color': 'transparent',
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#F8FAFC',
-          'circle-stroke-opacity': [
-            'case',
-            ['get', 'isHovered'],
-            0.9,
-            0.0,
-          ],
-        },
-      });
-
-      // Unclustered Incident Marker Points
-      map.addLayer({
-        id: 'incidents-points',
-        type: 'circle',
-        source: 'incidents-src',
-        filter: ['!', ['has', 'point_count']],
-        paint: {
-          'circle-radius': [
-            'case',
-            ['get', 'isSelected'],
-            8.5,
-            ['get', 'isHovered'],
-            8.0,
-            6.5,
-          ],
-          'circle-color': [
-            'step',
-            ['get', 'severity_score'],
-            '#38BDF8', // < 75: Sky Blue
-            75, '#F59E0B', // 75-84: Amber
-            85, '#EF4444', // >= 85: Crimson Red
-          ],
-          'circle-stroke-width': 1.5,
-          'circle-stroke-color': '#0F172A',
-        },
-      });
-
-      map.addLayer({
-        id: 'incident-labels', type: 'symbol', source: 'incidents-src',
-        filter: ['!', ['has', 'point_count']], minzoom: 13,
-        layout: { 'text-field': ['concat', '#', ['to-string', ['get', 'id']]], 'text-size': ['interpolate', ['linear'], ['zoom'], 13, 10, 16, 13], 'text-offset': [0, 1.4], 'text-allow-overlap': false },
-        paint: { 'text-color': '#e2e8f0', 'text-halo-color': '#0f172a', 'text-halo-width': 1.5 },
-      });
-
-      // Incident Click Handler
-      map.on('click', 'incidents-points', (e) => {
-        if (!e.features || !e.features[0]) return;
-        const incId = Number(e.features[0].properties?.id);
-        if (!isNaN(incId)) {
-          onIncidentClick(incId);
-        }
-      });
-
-      // Cluster Click -> Zoom In
-      map.on('click', 'incidents-clusters', async (e) => {
-        if (!e.features || !e.features[0]) return;
-        const features = map.queryRenderedFeatures(e.point, { layers: ['incidents-clusters'] });
-        const clusterId = features[0].properties.cluster_id;
-        const source = map.getSource('incidents-src') as maplibregl.GeoJSONSource;
-        const zoom = await source.getClusterExpansionZoom(clusterId);
-        const coords = (features[0].geometry as any).coordinates;
-        map.easeTo({ center: coords, zoom: Math.min(zoom + 0.5, 16) });
-      });
-
-      // Cursor & Hover Handlers
-      map.on('mouseenter', 'incidents-points', (e) => {
-        map.getCanvas().style.cursor = 'pointer';
-        if (e.features && e.features[0] && onIncidentHover) {
-          const incId = Number(e.features[0].properties?.id);
-          onIncidentHover(incId);
-        }
-      });
-
-      map.on('mouseleave', 'incidents-points', () => {
-        map.getCanvas().style.cursor = '';
-        if (onIncidentHover) {
-          onIncidentHover(null);
-        }
-      });
-
-      map.on('mouseenter', 'incidents-clusters', () => {
-        map.getCanvas().style.cursor = 'pointer';
-      });
-      map.on('mouseleave', 'incidents-clusters', () => {
-        map.getCanvas().style.cursor = '';
-      });
-
-      setMapLoaded(true);
-    });
-
-    mapRef.current = map;
-
-    return () => {
-      try {
-        map.remove();
-      } catch {}
-      mapRef.current = null;
-    };
-    } catch (initErr) {
-      console.warn('[JaipurMapLibre] WebGL MapLibre initialization failed:', initErr);
+      return () => {
+        try {
+          map.remove();
+        } catch {}
+        mapRef.current = null;
+      };
+    } catch (err) {
       setWebglError(true);
     }
-  }, []);
+  }, [variant, allowSpatial, armColor]);
 
-  // Update Incident GeoJSON Data when incidents, selection or hover changes
+  // Update GeoJSON for incidents
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
     const map = mapRef.current;
-    const source = map.getSource('incidents-src') as maplibregl.GeoJSONSource;
-    if (!source) return;
+    const src = map.getSource('incidents-src') as maplibregl.GeoJSONSource;
+    if (!src) return;
 
-    const geojsonData: GeoJSON.FeatureCollection = {
+    const fc: GeoJSON.FeatureCollection = {
       type: 'FeatureCollection',
-      features: incidents.map((inc) => {
-        const isSelected = selectedIds.includes(inc.id);
-        const isHovered = activeFocusedId === inc.id;
-        return {
-          type: 'Feature',
-          geometry: inc.geometry,
-          properties: {
-            id: inc.id,
-            title: inc.title,
-            incident_type: inc.incident_type,
-            severity_score: inc.severity_score,
-            display_score: inc.display_score,
-            display_rank: inc.display_rank,
-            impact_radius_m: inc.impact_radius_m,
-            isSelected,
-            isHovered,
-          },
-        };
-      }),
+      features: incidents.map((inc) => ({
+        type: 'Feature',
+        geometry: inc.geometry,
+        properties: {
+          id: inc.id,
+          title: inc.title,
+          severity_score: inc.severity_score,
+          display_rank: inc.display_rank,
+          display_score: inc.display_score,
+          impact_radius_m: inc.impact_radius_m,
+          isSelected: selectedIds.includes(inc.id),
+          isHovered: activeFocusedId === inc.id,
+        },
+      })),
     };
 
-    source.setData(geojsonData);
+    src.setData(fc);
   }, [incidents, selectedIds, activeFocusedId, mapLoaded]);
 
-  // Update Dynamic Impact Radius Polygons (Translucent Buffer Discs)
+  // Update Dynamic Impact Radius Polygons
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
     const map = mapRef.current;
-    const source = map.getSource('impact-radius-src') as maplibregl.GeoJSONSource;
-    if (!source) return;
+    const src = map.getSource('impact-radius-src') as maplibregl.GeoJSONSource;
+    if (!src) return;
 
     const activeIncidents = incidents.filter(
-      (inc) => (inc.id === activeFocusedId || selectedIds.includes(inc.id)) &&
-        Array.isArray(inc.geometry?.coordinates) && inc.geometry.coordinates.length >= 2 &&
-        inc.geometry.coordinates.slice(0, 2).every(Number.isFinite)
+      (inc) =>
+        (inc.id === activeFocusedId || selectedIds.includes(inc.id)) &&
+        Array.isArray(inc.geometry?.coordinates) &&
+        inc.geometry.coordinates.length >= 2
     );
 
-    if (activeIncidents.length === 0 || !layerVisibility.impactRadius) {
-      source.setData({ type: 'FeatureCollection', features: [] });
+    // Only show impact radius for treatment arm (allowSpatial)
+    if (!allowSpatial || activeIncidents.length === 0 || !layerVisibility.impactRadius) {
+      src.setData({ type: 'FeatureCollection', features: [] });
       return;
     }
 
-    const bufferFeatures = activeIncidents.map((inc) => {
+    const circles = activeIncidents.map((inc) => {
       const center: [number, number] = [inc.geometry.coordinates[0], inc.geometry.coordinates[1]];
       return createCirclePolygon(center, inc.impact_radius_m);
     });
 
-    source.setData({
-      type: 'FeatureCollection',
-      features: bufferFeatures,
-    });
+    src.setData({ type: 'FeatureCollection', features: circles });
   }, [incidents, activeFocusedId, selectedIds, mapLoaded, layerVisibility.impactRadius]);
 
   // Handle Layer Visibility Toggles
@@ -557,153 +465,111 @@ export default function JaipurMapLibre({
     };
 
     setVisibility('population-heatmap-fill', layerVisibility.populationHeatmap);
-    if (map.getLayer('population-heatmap-fill')) map.setPaintProperty('population-heatmap-fill', 'fill-opacity', Math.max(0, Math.min(100, populationOpacity)) / 100);
-    const facilityFilter = ['in', ['get', 'asset_type'], ['literal', [
-      ...(layerVisibility.hospitals ? ['hospital'] : []),
-      ...(layerVisibility.fireStations ? ['fire_station'] : []),
-      ...(layerVisibility.schools ? ['school'] : []),
-    ]]] as maplibregl.FilterSpecification;
-    if (map.getLayer('facilities-halo')) map.setFilter('facilities-halo', facilityFilter);
-    if (map.getLayer('facilities-core')) map.setFilter('facilities-core', facilityFilter);
-    const roadLayers = (map as maplibregl.Map & { __terraRoadLayers?: string[] }).__terraRoadLayers ?? [];
-    roadLayers.forEach((id) => setVisibility(id, layerVisibility.roads));
+    setVisibility('facilities-core', layerVisibility.hospitals || layerVisibility.fireStations || layerVisibility.schools);
     setVisibility('impact-radius-fill', layerVisibility.impactRadius);
     setVisibility('impact-radius-line', layerVisibility.impactRadius);
     setVisibility('jaipur-boundary-line', layerVisibility.boundary);
-  }, [layerVisibility, populationOpacity, mapLoaded]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapContainer.current) return;
-    const observer = new ResizeObserver(() => map.resize());
-    observer.observe(mapContainer.current);
-    return () => observer.disconnect();
-  }, []);
-
-  // Camera pan to focused incident when hovered or selected
-  useEffect(() => {
-    if (!mapRef.current || !mapLoaded || !activeFocusedId) return;
-    const inc = incidents.find((i) => i.id === activeFocusedId);
-    if (inc && inc.geometry?.coordinates) {
-      mapRef.current.easeTo({
-        center: [inc.geometry.coordinates[0], inc.geometry.coordinates[1]],
-        duration: 400,
-      });
-    }
-  }, [activeFocusedId, incidents, mapLoaded]);
+  }, [layerVisibility, mapLoaded]);
 
   if (webglError) {
     return (
       <div className="relative w-full h-full">
-        <div className="absolute top-2 left-2 z-20 bg-slate-900/90 text-sky-200 text-[10px] font-mono px-2.5 py-1 rounded shadow-md border border-sky-600/50 flex items-center space-x-1.5">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Active 2D Cartographic Engine (High-Performance Leaflet GIS)</span>
-        </div>
         <JaipurMap
           incidents={incidents}
           selectedIds={selectedIds}
+          onIncidentClick={onIncidentClick}
           variant={variant}
           activeFocusedId={activeFocusedId}
-          onIncidentClick={onIncidentClick}
           onIncidentHover={onIncidentHover}
+          layerVisibility={layerVisibility}
         />
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-[#0F172A]">
-      {/* MapLibre WebGL Canvas Container */}
-      <div ref={mapContainer} className="w-full h-full" />
-
-      {/* Professional Cartographic Legend (Matching Hackathon GIS Standards) */}
-      <div className={`absolute top-14 left-3 z-10 bg-slate-950/90 backdrop-blur-md border border-slate-800 rounded-lg shadow-lg text-[10px] font-sans text-slate-200 select-none transition-all duration-200 ${legendCollapsed ? 'p-1.5 max-w-[160px]' : 'p-2 space-y-1.5 max-w-[190px]'}`}>
-        {/* Header / Collapse Toggle */}
-        <button
-          type="button"
-          onClick={() => setLegendCollapsed(!legendCollapsed)}
-          className="w-full flex items-center justify-between text-left pb-1 border-b border-slate-800 text-[10px] font-mono uppercase font-bold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer group"
-          title={legendCollapsed ? "Expand legend" : "Collapse legend"}
-        >
-          <div className="flex items-center space-x-1 truncate">
-            <span className="truncate">JAIPUR GIS LAYERS</span>
-            <span className="text-[9px] text-slate-500 group-hover:text-slate-300">
-              {legendCollapsed ? '▼' : '▲'}
-            </span>
-          </div>
-          <span className="text-sky-400 text-[9px] ml-1 shrink-0">WGS84</span>
-        </button>
-
-        {!legendCollapsed && (
+    <div className="relative w-full h-full overflow-hidden bg-[var(--surface-raised)] border border-[var(--border-hairline)] rounded-[var(--radius-sm)] flex flex-col">
+      {/* Spec 1.2.6: Pill segment toggles top-left: Population, Facilities, Roads. Never changes ranking */}
+      <div className="absolute top-3 left-3 z-10 flex items-center space-x-1 p-1 bg-[var(--surface)]/95 backdrop-blur-xs border border-[var(--border-hairline)] rounded-[var(--radius-sm)] shadow-xs text-[11px] font-mono">
+        {allowSpatial && onToggleLayer && (
+          <button
+            type="button"
+            onClick={() => onToggleLayer('populationHeatmap')}
+            className={`px-2 py-1 rounded-[4px] font-medium transition-colors cursor-pointer ${
+              layerVisibility.populationHeatmap
+                ? 'bg-[var(--accent)] text-white'
+                : 'text-[var(--text-mid)] hover:bg-[var(--surface-raised)]'
+            }`}
+          >
+            Population
+          </button>
+        )}
+        {allowSpatial && onToggleLayer && (
           <>
-            {/* Synthetic population gradient; not WorldPop or census data. */}
-            {layerVisibility.populationHeatmap && (
-              <div className="space-y-1">
-                <div className="text-[10px] text-slate-300 font-semibold flex justify-between">
-                  <span>Synthetic population surface</span>
-                  <span className="font-mono text-[9px] text-slate-400">Radial model</span>
-                </div>
-                <div className="h-2 w-full rounded-sm bg-gradient-to-r from-slate-900 via-teal-600 to-amber-300 border border-slate-700/60" />
-                <div className="flex justify-between text-[8px] font-mono text-slate-400">
-                  <span>Low</span>
-                  <span>Moderate</span>
-                  <span>Extreme</span>
-                </div>
-              </div>
-            )}
-
-            {/* Incident Severity Dots (Image 3 Style) */}
-            <div className="space-y-1 pt-1 border-t border-slate-800/80">
-              <div className="text-[10px] text-slate-300 font-semibold">Incident SCADA Severity</div>
-              <div className="grid grid-cols-3 gap-1 text-[9px] font-mono">
-                <div className="flex items-center space-x-1">
-                  <span className="w-2 h-2 rounded-full bg-red-500 shadow-xs" />
-                  <span>&ge;85 High</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <span className="w-2 h-2 rounded-full bg-amber-500 shadow-xs" />
-                  <span>75-84 Med</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <span className="w-2 h-2 rounded-full bg-sky-400 shadow-xs" />
-                  <span>&lt;75 Mod</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Critical Infrastructure Markers (Image 2 Style) */}
-            {(layerVisibility.hospitals || layerVisibility.fireStations || layerVisibility.schools) && (
-              <div className="space-y-1 pt-1 border-t border-slate-800/80">
-                <div className="text-[10px] text-slate-300 font-semibold">Reference facilities · unverified coordinates</div>
-                <div className="flex items-center space-x-3 text-[9px]">
-                  <div className="flex items-center space-x-1">
-                    <span className="w-2 h-2 rounded-full bg-pink-500" />
-                    <span>Hospital</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <span className="w-2 h-2 rounded-full bg-orange-500" />
-                    <span>Fire</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <span className="w-2 h-2 rounded-full bg-yellow-400" />
-                    <span>School</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Impact Radius Buffer (Image 4 Style) */}
-            {layerVisibility.impactRadius && (
-              <div className="flex items-center space-x-1.5 pt-1 border-t border-slate-800/80 text-[9px] text-purple-300 font-mono">
-                <span className="w-2.5 h-2.5 rounded-full border border-purple-400 bg-purple-500/30" />
-                <span>Impact Disruption Radius</span>
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                onToggleLayer('hospitals');
+                onToggleLayer('fireStations');
+              }}
+              className={`px-2 py-1 rounded-[4px] font-medium transition-colors cursor-pointer ${
+                layerVisibility.hospitals || layerVisibility.fireStations
+                  ? 'bg-[var(--accent)] text-white'
+                  : 'text-[var(--text-mid)] hover:bg-[var(--surface-raised)]'
+              }`}
+            >
+              Facilities
+            </button>
+            <button
+              type="button"
+              onClick={() => onToggleLayer('roads')}
+              className={`px-2 py-1 rounded-[4px] font-medium transition-colors cursor-pointer ${
+                layerVisibility.roads
+                  ? 'bg-[var(--accent)] text-white'
+                  : 'text-[var(--text-mid)] hover:bg-[var(--surface-raised)]'
+              }`}
+            >
+              Roads
+            </button>
           </>
         )}
       </div>
-      <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 rounded bg-slate-950/85 border border-slate-700 px-3 py-1 text-[10px] font-mono text-slate-300 pointer-events-none">JAIPUR · approximate boundary · WGS84</div>
-      <div className="absolute bottom-8 right-2 z-10 text-[9px] text-slate-400 bg-slate-950/75 rounded px-2 py-1 pointer-events-none">Population: synthetic radial model · Incidents: synthetic scenario · Roads: OpenStreetMap</div>
+
+      {/* MapLibre Canvas Container */}
+      <div ref={mapContainer} className="flex-1 w-full h-full" />
+
+      {/* Spec 1.2.7: Legend row under the map, 12px --text-mid */}
+      <div className="shrink-0 px-3 py-2 bg-[var(--surface)] border-t border-[var(--border-hairline)] flex items-center justify-between text-[12px] text-[var(--text-mid)] font-sans">
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1.5">
+            <span
+              className="w-3 h-3 rounded-full border border-white shrink-0"
+              style={{ backgroundColor: armColor }}
+            />
+            <span>{isTreatment ? 'Treatment (Cyan)' : 'Control (Slate)'}</span>
+          </div>
+          <div className="flex items-center space-x-1.5">
+            <span className="w-3 h-3 rounded-full border-2 border-[var(--accent)] shrink-0" />
+            <span>Hover ring</span>
+          </div>
+          <div className="flex items-center space-x-1.5">
+            <span className="w-3 h-3 rounded-full border-2 border-[var(--accent)] bg-[var(--accent)]/20 shrink-0" />
+            <span>Selected (11px ring)</span>
+          </div>
+          {allowSpatial && (
+            <div className="flex items-center space-x-1.5">
+              <span
+                className="w-3 h-3 rounded-full border border-dashed opacity-50 shrink-0"
+                style={{ borderColor: armColor, backgroundColor: armColor }}
+              />
+              <span>Impact radius</span>
+            </div>
+          )}
+        </div>
+        <div className="font-mono text-[11px] text-[var(--text-low)]">
+          WGS84 · Jaipur Urban
+        </div>
+      </div>
     </div>
   );
 }

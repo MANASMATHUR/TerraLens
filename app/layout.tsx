@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { JetBrains_Mono, Inter } from 'next/font/google';
+import './theme.css';
 import './globals.css';
 import 'leaflet/dist/leaflet.css';
 
