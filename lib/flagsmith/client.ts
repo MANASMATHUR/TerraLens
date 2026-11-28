@@ -68,12 +68,15 @@ export async function initFlagsmith(participantId: string, sessionConfig?: Exper
     // Resolve the multivariate variant string.
     const rawValue = experimentFlag?.value ?? flagsmith.getValue(STRATEGY_FLAG_NAME);
 
-    // If the experiment has ended or inExperiment is false, but flag has a valid variant:
+    // If the experiment has ended or flag has no active experiment (e.g. rolled out variant post-experiment):
     // Enter post-experiment mode: serve the shipped strategy without counting as an experiment exposure.
+    const isPostExperimentRollout =
+      experimentFlag != null &&
+      (!experimentFlag.experiment || experimentFlag.experiment.inExperiment === false);
+
     if (
       (rawValue === 'severity_only' || rawValue === 'spatial_impact') &&
-      experimentFlag != null &&
-      experimentFlag.experiment?.inExperiment === false
+      isPostExperimentRollout
     ) {
       const variant: ExperimentVariant = rawValue;
       let configValue: unknown = sessionConfig ?? null;

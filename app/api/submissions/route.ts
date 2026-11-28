@@ -132,12 +132,13 @@ export async function POST(req: Request) {
     const assignedVariant = strategyFlag?.value;
     const inExperiment = Boolean(strategyFlag?.experiment?.inExperiment);
     const isPostExperiment = body.assignment_source === 'post_experiment';
+    const isShippedRollout = Boolean(!strategyFlag?.experiment && isExperimentVariant(assignedVariant));
 
     if (
       !strategyFlag ||
       strategyFlag.isDefault ||
       !strategyFlag.enabled ||
-      (!inExperiment && !isPostExperiment) ||
+      (!inExperiment && !isPostExperiment && !isShippedRollout) ||
       !isExperimentVariant(assignedVariant)
     ) {
       return NextResponse.json({ error: 'Participant has no valid Flagsmith experiment assignment.' }, { status: 403 });
