@@ -26,6 +26,7 @@ import { rankIncidents } from '@/lib/scoring/engine';
 import { ExperimentControlState, ExperimentRemoteConfig } from '@/lib/flagsmith/config-schema';
 import { IncidentWithContext, ExperimentVariant, SubmissionResult } from '@/types';
 import WhyThisIncidentModal from '@/components/incidents/WhyThisIncidentModal';
+import { showSpatialContext } from '@/lib/experiment/gate';
 
 // ─── Experiment Gate Screens ───────────────────────────────────────────────────
 
@@ -223,6 +224,8 @@ export default function TaskPage() {
   const [storageMode, setStorageMode] = useState<'supabase' | 'local_sqlite'>('local_sqlite');
   const [whyModalIncident, setWhyModalIncident] = useState<IncidentWithContext | null>(null);
   const [isWhyModalOpen, setIsWhyModalOpen] = useState<boolean>(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState<boolean>(false);
+  const [isDetailPanelOpen, setIsDetailPanelOpen] = useState<boolean>(false);
   const [layerVisibility, setLayerVisibility] = useState({
     populationHeatmap: true,
     hospitals: true,
@@ -541,67 +544,61 @@ export default function TaskPage() {
     );
   }
 
-  if (!taskStarted) {
-    return <main className="min-h-dvh bg-slate-950 p-5 text-white sm:flex sm:items-center sm:justify-center sm:p-8">
-      <section className="mx-auto w-full max-w-xl space-y-5 rounded-xl border border-slate-700 bg-slate-900 p-5 sm:p-8">
-        <p className="font-mono text-xs uppercase tracking-widest text-sky-300">20-second tutorial</p>
-        <h1 className="text-2xl font-semibold">Choose three incidents to prioritize</h1>
-        {controlState === 'unassigned' && <p role="status" className="rounded border border-amber-400 bg-amber-950 p-3 text-sm text-amber-100">State: unassigned. Showing severity-only ranking because a persistent participant ID could not be stored; experiment participation is unavailable.</p>}
-        <ol className="list-decimal space-y-3 pl-5 text-sm leading-6 text-slate-300">
-          <li>Use the ranked incident list or tap incident markers on the map.</li>
-          <li>Review population, facility, and road-access context before choosing.</li>
-          <li>Select exactly three incidents. You have one attempt and two minutes.</li>
-          <li>If you reload after starting, your selections and remaining time resume.</li>
-        </ol>
-        {degradedReason && <p role="status" className="rounded border border-amber-400 bg-amber-950 p-3 text-sm text-amber-100">{degradedReason}</p>}
-        <div className="flex items-center justify-between border-t border-slate-700 pt-4">
-          <span className="font-mono text-sm text-slate-400">{tutorialSeconds > 0 ? `Start available in ${tutorialSeconds}s` : 'Tutorial complete'}</span>
-          <button onClick={handleBeginTask} disabled={tutorialSeconds > 0 || controlState === 'unassigned'} className="rounded bg-sky-400 px-4 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-40">Start 2-minute task</button>
-        </div>
-      </section>
-    </main>;
-  }
+  // Briefing modal (Spec 1.4: Dim live map behind it; countdown inside button "Start in 0:17"; one-attempt rule in amber callout)
+  const isBriefing = !taskStarted && controlState === 'experiment_active' && !isLoading;
 
   return (
-    <div className="h-dvh min-h-[560px] w-screen bg-[#F8FAFC] flex flex-col overflow-hidden font-sans text-slate-900">
+    <div className="h-dvh min-h-[560px] w-screen bg-[var(--bg)] flex flex-col overflow-hidden font-sans text-[var(--text-hi)]">
       {/* Top Application Bar */}
       <Header variant={variant} participantId={participantId} storageMode={storageMode} />
 
-      {/* Experiment Governance Strip (collapsible, visible to judges) */}
-      {remoteConfig && (
-        <ExperimentGovernanceStrip
-          participantId={participantId}
-          variant={variant}
-          remoteConfig={remoteConfig}
-          storageMode={storageMode}
-        />
-      )}
-      {degradedReason && <div role="status" className="z-40 border-b border-amber-300 bg-amber-100 px-3 py-2 text-center text-xs font-semibold text-amber-950">{degradedReason}</div>}
+      {/* Task Sub-Header: timer mm:ss, 0/3 counter, and submit button (Spec 1.4) */}
+      <div className="h-12 border-b border-[var(--border-hairline)] bg-[var(--surface)] px-4 flex items-center justify-between shrink-0 select-none">
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <span className="text-[11px] font-mono text-[var(--text-mid)] uppercase tracking-wider">Timer</span>
+            <span
+              className={`font-mono text-[14px] font-bold tabular-nums px-2 py-0.5 rounded-[var(--radius-sm)] border ${
+                secondsRemaining <= 30
+                  ? 'bg-rose-50 text-[var(--bad)] border-rose-200 animate-pulse'
+                  : 'bg-[var(--surface-raised)] text-[var(--text-hi)] border-[var(--border-hairline)]'
+              }`}
+              aria-live="polite"
+            >
+              {timeFormatted}
+            </span>
+          </div>
 
-      {/* Main Studio Grid: Left List (320px), Center Map (Flex-1), Right Panel (320px) */}
-      <div className="flex-1 flex relative overflow-hidden">
-        {/* Left Incident Stream with Layer Controls */}
-        <LeftIncidentPanel
-          incidents={incidents}
-          variant={variant}
-          selectedIds={selectedIds}
-          activeFocusedId={focusedId}
-          onToggleIncident={handleToggleIncident}
-          onHoverIncident={handleHoverIncident}
-          onInspectWhy={(inc) => {
-            setWhyModalIncident(inc);
-            setIsWhyModalOpen(true);
+          <div className="flex items-center space-x-1.5">
+            <span className="text-[11px] font-mono text-[var(--text-mid)] uppercase tracking-wider">Triage</span>
+            <span className="font-mono text-[13px] font-bold text-[var(--accent)] tabular-nums">
+              {selectedIds.length}/3
+            </span>
+          </div>
+        </div>
+
+        {/* Submit with confirmation modal trigger */}
+        <button
+          type="button"
+          onClick={() => {
+            if (selectedIds.length === 3) setIsConfirmOpen(true);
           }}
-          layerVisibility={layerVisibility}
-          onToggleLayer={handleToggleLayer}
-          populationOpacity={populationOpacity}
-          onPopulationOpacityChange={setPopulationOpacity}
-          isCollapsed={leftCollapsed}
-          onToggleCollapsed={() => setLeftCollapsed((value) => !value)}
-        />
+          disabled={selectedIds.length !== 3 || isSubmitting || timeExpired}
+          className={`py-1.5 px-4 rounded-[var(--radius-sm)] text-[12px] font-bold transition-all ${
+            selectedIds.length === 3 && !timeExpired && !isSubmitting
+              ? 'bg-[var(--accent)] text-white hover:opacity-90 cursor-pointer shadow-xs'
+              : 'bg-[var(--surface-raised)] text-[var(--text-low)] border border-[var(--border-hairline)] cursor-not-allowed'
+          }`}
+          title={selectedIds.length !== 3 ? 'Pick 3 to submit' : 'Submit selected incident priorities'}
+        >
+          {selectedIds.length !== 3 ? 'Pick 3 to submit' : 'Submit triage'}
+        </button>
+      </div>
 
-        {/* Center Real MapLibre OpenFreeMap GIS Viewport */}
-        <div className="flex-1 relative h-full">
+      {/* Two-Column Console (Spec 1.2): Map 62%, Incident List 38%, no page scroll on desktop */}
+      <div className="flex-1 flex flex-col md:flex-row relative overflow-hidden">
+        {/* Map Column (62% desktop width) */}
+        <div className="w-full md:w-[62%] h-[45vh] md:h-full relative overflow-hidden border-b md:border-b-0 md:border-r border-[var(--border-hairline)]">
           <JaipurMapLibre
             incidents={incidents}
             selectedIds={selectedIds}
@@ -611,29 +608,147 @@ export default function TaskPage() {
             onIncidentHover={handleHoverIncident}
             layerVisibility={layerVisibility}
             populationOpacity={populationOpacity}
+            onToggleLayer={handleToggleLayer}
           />
         </div>
 
-        {/* Right Collapsible Analytical Panel & Controls */}
-        <RightTriageSidebar
-          incidents={incidents}
-          selectedIds={selectedIds}
-          variant={variant}
-          onSubmit={handleSubmit}
-          isSubmitting={isSubmitting}
-          timeExpired={timeExpired}
-          timeFormatted={timeFormatted}
-          onInspectWhy={(inc) => {
-            setWhyModalIncident(inc);
-            setIsWhyModalOpen(true);
-          }}
-          focusedIncident={incidents.find((i) => i.id === focusedId) || null}
-        />
+        {/* List Column (38% desktop width, scrolls on its own) */}
+        <div className="w-full md:w-[38%] h-[55vh] md:h-full relative flex flex-col overflow-hidden bg-[var(--surface)]">
+          <LeftIncidentPanel
+            incidents={incidents}
+            variant={variant}
+            selectedIds={selectedIds}
+            activeFocusedId={focusedId}
+            onToggleIncident={handleToggleIncident}
+            onHoverIncident={handleHoverIncident}
+            onInspectWhy={(inc) => {
+              setFocusedId(inc.id);
+              setIsDetailPanelOpen(true);
+            }}
+            layerVisibility={layerVisibility}
+            onToggleLayer={handleToggleLayer}
+            populationOpacity={populationOpacity}
+            onPopulationOpacityChange={setPopulationOpacity}
+            isCollapsed={false}
+            onToggleCollapsed={() => {}}
+          />
+
+          {/* Right-side detail slide-in panel over the list on incident click (Spec 1.2.9) */}
+          {isDetailPanelOpen && focusedId && (
+            <div className="absolute inset-0 z-30 bg-[var(--surface)] flex flex-col animate-in fade-in slide-in-from-right-4 duration-150">
+              <RightTriageSidebar
+                incidents={incidents}
+                selectedIds={selectedIds}
+                variant={variant}
+                onSubmit={() => setIsConfirmOpen(true)}
+                isSubmitting={isSubmitting}
+                timeExpired={timeExpired}
+                timeFormatted={timeFormatted}
+                focusedIncident={incidents.find((i) => i.id === focusedId) || null}
+                onClose={() => setIsDetailPanelOpen(false)}
+              />
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Briefing Modal */}
+      {isBriefing && (
+        <div className="fixed inset-0 bg-[rgba(15,23,42,0.45)] backdrop-blur-2xs z-50 flex items-center justify-center p-4">
+          <section className="mx-auto w-full max-w-lg space-y-4 rounded-[var(--radius-md)] border border-[var(--border-hairline)] bg-[var(--surface)] p-6 shadow-[var(--shadow-floating)] text-[var(--text-hi)]">
+            <div className="flex items-center justify-between border-b border-[var(--border-hairline)] pb-2.5">
+              <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--text-mid)] font-semibold">
+                OPERATIONAL BRIEFING · JAIPUR MONSOON
+              </span>
+              <span className="text-[11px] font-mono text-[var(--accent)] font-bold">
+                {variant === 'spatial_impact' ? 'TREATMENT (S_B)' : 'CONTROL (S_A)'}
+              </span>
+            </div>
+
+            <h1 className="text-[18px] font-bold text-[var(--text-hi)]">
+              Select 3 High-Impact Incidents
+            </h1>
+
+            {/* Amber callout for one-attempt rule */}
+            <div className="p-3 rounded-[var(--radius-sm)] border border-[var(--warn)]/40 bg-amber-50 text-[12px] text-[var(--warn)] font-medium leading-relaxed">
+              ⚠️ Strict Protocol: You have one attempt and 120 seconds to triage. Submissions cannot be repeated or modified once dispatched.
+            </div>
+
+            <ol className="list-decimal space-y-2 pl-4 text-[12px] text-[var(--text-mid)] leading-relaxed">
+              <li>Review the ranked incident stream and map markers.</li>
+              <li>{showSpatialContext(variant) ? 'Evaluate population exposure, critical hospital proximity, and route access.' : 'Evaluate SCADA severity telemetry indicators.'}</li>
+              <li>Pick exactly three priority targets before the clock expires.</li>
+            </ol>
+
+            <div className="pt-2 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={handleBeginTask}
+                disabled={tutorialSeconds > 0}
+                className={`py-2 px-5 rounded-[var(--radius-sm)] text-[13px] font-bold transition-all cursor-pointer ${
+                  tutorialSeconds > 0
+                    ? 'bg-[var(--surface-raised)] text-[var(--text-mid)] border border-[var(--border-hairline)] cursor-not-allowed'
+                    : 'bg-[var(--accent)] text-white hover:opacity-90 shadow-xs'
+                }`}
+              >
+                {tutorialSeconds > 0 ? `Start in 0:${tutorialSeconds.toString().padStart(2, '0')}` : 'Begin Task'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* Confirmation Sheet */}
+      {isConfirmOpen && (
+        <div className="fixed inset-0 bg-[rgba(15,23,42,0.45)] backdrop-blur-2xs z-50 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-[var(--surface)] border border-[var(--border-hairline)] rounded-[var(--radius-md)] p-6 space-y-4 shadow-[var(--shadow-floating)]">
+            <h2 className="text-[16px] font-bold text-[var(--text-hi)]">Confirm Dispatch Triage</h2>
+            <p className="text-[12px] text-[var(--text-mid)] leading-relaxed">
+              Review your 3 chosen priority targets. <strong>Submissions cannot be repeated</strong> once confirmed.
+            </p>
+
+            <div className="space-y-2 py-1">
+              {selectedIds.map((id) => {
+                const inc = incidents.find((i) => i.id === id);
+                return (
+                  <div
+                    key={id}
+                    className="p-2.5 rounded-[var(--radius-sm)] bg-[var(--surface-raised)] border border-[var(--border-hairline)] flex items-center justify-between text-[12px]"
+                  >
+                    <span className="font-semibold text-[var(--text-hi)]">#{id} {inc?.title.split(' - ')[0]}</span>
+                    <span className="font-mono text-[var(--text-mid)]">Sev {inc?.severity_score.toFixed(0)}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsConfirmOpen(false)}
+                className="flex-1 py-2 px-3 rounded-[var(--radius-sm)] border border-[var(--border-hairline)] bg-[var(--surface)] hover:bg-[var(--surface-raised)] text-[var(--text-mid)] text-[12px] font-semibold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsConfirmOpen(false);
+                  handleSubmit();
+                }}
+                disabled={isSubmitting}
+                className="flex-1 py-2 px-3 rounded-[var(--radius-sm)] bg-[var(--accent)] hover:opacity-90 text-white text-[12px] font-bold cursor-pointer"
+              >
+                {isSubmitting ? 'Submitting…' : 'Confirm & Dispatch'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Submission Results Modal */}
       {result && (
-        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[rgba(15,23,42,0.45)] z-50 flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-white border border-slate-300 rounded p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div>

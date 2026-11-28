@@ -50,11 +50,11 @@ export default function WhyThisIncidentModal({
 
   return (
     <div
-      className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-150"
+      className="fixed inset-0 bg-[rgba(15,23,42,0.45)] backdrop-blur-2xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div
-        className="max-w-lg w-full bg-white border border-slate-200 rounded-xl p-6 space-y-5 shadow-2xl relative"
+        className="max-w-lg w-full bg-[var(--surface)] border border-[var(--border-hairline)] rounded-[var(--radius-md)] p-6 space-y-5 shadow-[var(--shadow-floating)] relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -197,8 +197,9 @@ export default function WhyThisIncidentModal({
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="px-4 py-1.5 rounded-md bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs shadow-xs transition-colors"
+            className="px-4 py-1.5 rounded-[var(--radius-sm)] bg-[var(--text-hi)] hover:opacity-90 text-white font-semibold text-xs shadow-xs transition-colors cursor-pointer"
           >
             Close Inspector
           </button>

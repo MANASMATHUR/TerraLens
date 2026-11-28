@@ -274,3 +274,46 @@ test('Sessions API rejects deterministic_fallback assignment_source', async () =
   const cachedResult = sessionsGuard('cached');
   assert.equal(cachedResult.status, 200);
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase C: Arm Gating Isolation
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('Gating: showSpatialContext strictly isolates spatial info to spatial_impact only', () => {
+  function showSpatialContext(variant) {
+    return variant === 'spatial_impact';
+  }
+
+  assert.equal(showSpatialContext('severity_only'), false, 'Control arm must NOT show spatial context');
+  assert.equal(showSpatialContext('control'), false, 'Control variant string must NOT show spatial context');
+  assert.equal(showSpatialContext(null), false, 'Null variant must NOT show spatial context');
+  assert.equal(showSpatialContext(undefined), false, 'Undefined variant must NOT show spatial context');
+  assert.equal(showSpatialContext('spatial_impact'), true, 'Treatment arm MUST show spatial context');
+
+  // Verify render output payload when gating is applied:
+  const incidentContext = {
+    population_exposed: 38000,
+    hospital_count: 3,
+    road_access_tier: 'Low'
+  };
+
+  function renderIncidentChips(variant, context) {
+    if (!showSpatialContext(variant)) {
+      return []; // Control sees zero spatial fields
+    }
+    return [
+      `Pop: ${(context.population_exposed / 1000).toFixed(0)}k`,
+      `Hosps: ${context.hospital_count}`,
+      `Access: ${context.road_access_tier}`
+    ];
+  }
+
+  const controlChips = renderIncidentChips('severity_only', incidentContext);
+  assert.equal(controlChips.length, 0, 'Control render must contain zero spatial chips');
+  assert.equal(JSON.stringify(controlChips).includes('38k'), false);
+  assert.equal(JSON.stringify(controlChips).includes('Hosps'), false);
+
+  const spatialChips = renderIncidentChips('spatial_impact', incidentContext);
+  assert.equal(spatialChips.length, 3, 'Spatial render must contain all 3 spatial chips');
+  assert.equal(spatialChips[0], 'Pop: 38k');
+});

@@ -70,7 +70,7 @@ Flagsmith acts as the central control plane, remote model configuration layer, a
 
 ---
 
-## Experiment 581: Walkthrough & Real Results
+## Experiment 581: Walkthrough & Real Results (Frozen Winner)
 
 - **The Hypothesis:** Adding spatial consequence to incident prioritization increases the rate at which dispatchers identify and select benchmark high-consequence incidents compared with severity-only ranking. Continuous consequence capture acts as a manipulation check confirming the spatial model promotes high-consequence incidents to the top of the queue.
 - **Traffic Allocation:** 50% Control / 50% Treatment across 123 evaluated identities in Flagsmith's warehouse.
@@ -79,9 +79,10 @@ Flagsmith acts as the central control plane, remote model configuration layer, a
   - **Secondary:** `priority_task_success` (Occurrence, Metric ID 446) — Selecting at least 2 of 3 benchmark top incidents.
   - **Guardrail:** `task_duration_seconds` (Mean, Metric ID 583) — Decision duration to ensure spatial context does not slow dispatch time.
 - **Final Flagsmith Bayesian Verdict:**
-  - **Primary Metric:** Control **0.610** (n=61) vs Treatment **0.890** (n=62). **Flagsmith declared `Variant_1` the clear WINNER** with **+45.8% lift**, a 95% Credible Interval of **[+22.7%, +68.8%]**, and **99.995% chance to be best**.
+  - **Primary Metric:** Control **0.610** (n=61) vs Treatment **0.890** (n=62). **Flagsmith declared `Variant_1` the clear WINNER** with **+45.8% lift**, a 95% Credible Interval of **[+22.7%, +68.8%]**, and **99.995% (>99.99%) chance to be best**.
   - **Secondary Metric:** Control **18.0%** (11/61) vs Treatment **35.5%** (22/62), showing **+96.8% lift** and **93.5% chance to be best** (directionally positive behavioral signal).
   - **Guardrail Metric:** Control **2.61s** vs Treatment **3.67s** (scripted simulator wait latency).
+- **Frozen Payload State:** `docs/experiment-581-frozen.json` timestamp `2026-11-28T10:27:22.291873Z`, `is_final: true`.
 
 ---
 

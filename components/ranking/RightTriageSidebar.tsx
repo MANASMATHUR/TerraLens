@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { IncidentWithContext, ExperimentVariant } from '@/types';
-import IncidentRadarChart from '@/components/charts/IncidentRadarChart';
+import { showSpatialContext } from '@/lib/experiment/gate';
 
 interface RightTriageSidebarProps {
   incidents: IncidentWithContext[];
@@ -14,6 +14,7 @@ interface RightTriageSidebarProps {
   timeFormatted: string;
   onInspectWhy?: (incident: IncidentWithContext) => void;
   focusedIncident?: IncidentWithContext | null;
+  onClose?: () => void;
 }
 
 export default function RightTriageSidebar({
@@ -26,198 +27,154 @@ export default function RightTriageSidebar({
   timeFormatted,
   onInspectWhy,
   focusedIncident,
+  onClose,
 }: RightTriageSidebarProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const isComplete = selectedIds.length === 3;
+  const allowSpatial = showSpatialContext(variant);
 
-  // Active inspected incident: prioritize explicitly focused, then last selected, then top incident
   const activeIncident =
     focusedIncident ||
     (selectedIds.length > 0
       ? incidents.find((i) => i.id === selectedIds[selectedIds.length - 1]) || incidents[0]
       : incidents[0]);
 
-  if (isCollapsed) {
-    return (
-      <aside className="absolute inset-y-0 right-0 w-12 md:relative h-full bg-white border-l border-slate-200 flex flex-col items-center justify-between py-4 select-none z-30">
-        <button
-          onClick={() => setIsCollapsed(false)}
-          className="p-1.5 rounded border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-mono font-semibold cursor-pointer transition-colors"
-          title="Expand Investigation Panel"
-          aria-label="Expand Investigation Panel"
-        >
-          ◀
-        </button>
-
-        <div className="space-y-4 flex flex-col items-center text-center">
-          <div className="rotate-90 origin-center text-[10px] font-mono font-semibold text-slate-700 whitespace-nowrap">
-            {timeFormatted}
-          </div>
-          <div className="px-1.5 py-0.5 rounded bg-slate-900 text-white text-[10px] font-mono font-semibold flex items-center justify-center">
-            {selectedIds.length}/3
-          </div>
-        </div>
-
-        <button
-          onClick={onSubmit}
-          disabled={!isComplete || isSubmitting || timeExpired}
-          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-            isComplete && !timeExpired && !isSubmitting
-              ? 'bg-emerald-500 text-white cursor-pointer hover:scale-105'
-              : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-          }`}
-          title="Confirm Dispatch"
-        >
-          ✓
-        </button>
-      </aside>
-    );
-  }
+  const ctx = activeIncident?.context;
+  const popIndex = Number(ctx?.population_index ?? 0);
+  const facIndex = Number(ctx?.facility_index ?? 0);
+  const accIndex = Number(ctx?.accessibility_index ?? 0);
 
   return (
-    <aside className="absolute inset-y-0 right-0 w-[min(88vw,320px)] md:relative md:w-80 h-full bg-white border-l border-slate-200 flex flex-col justify-between select-none z-30 text-slate-900 text-xs shrink-0 shadow-xl transition-all">
-      <div className="p-3.5 space-y-3.5 overflow-y-auto flex-1">
-        {/* Top Header with Collapse Button */}
-        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold">
-            INVESTIGATION PANEL
+    <aside className="w-full h-full bg-[var(--surface)] border-l border-[var(--border-hairline)] flex flex-col justify-between select-none z-30 text-[var(--text-hi)] text-[12px] shadow-[var(--shadow-floating)] transition-all">
+      <div className="p-4 space-y-4 overflow-y-auto flex-1">
+        {/* Panel Header */}
+        <div className="flex items-center justify-between pb-2 border-b border-[var(--border-hairline)]">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--text-mid)] font-bold">
+            CONTEXT INSPECTION
           </span>
-          <button
-            onClick={() => setIsCollapsed(true)}
-            className="text-[10px] font-mono px-2 py-0.5 rounded border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold transition-colors cursor-pointer"
-            title="Collapse Sidebar"
-          >
-            ▶ Collapse
-          </button>
-        </div>
-
-        {/* Session Timer & Status */}
-        <div className="p-3 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-between shadow-2xs">
-          <div>
-            <div className="text-[10px] uppercase font-mono tracking-wider text-slate-500 font-bold">
-              TIME REMAINING
-            </div>
-            <div className="text-2xl font-bold font-mono text-slate-900 tracking-tight">
-              {timeFormatted}
-            </div>
-          </div>
-          <div className="text-right">
-            <span className="text-[11px] font-mono px-2 py-0.5 rounded border border-slate-200 bg-white text-slate-600 font-semibold shadow-2xs">
-              120s Limit
-            </span>
-          </div>
-        </div>
-
-        {/* Dispatch Action Button */}
-        <button
-          onClick={onSubmit}
-          disabled={!isComplete || isSubmitting || timeExpired}
-          className={`w-full py-3 px-4 rounded-lg font-bold text-xs uppercase tracking-wider transition-all shadow-sm flex items-center justify-center space-x-2 ${
-            isComplete && !timeExpired && !isSubmitting
-              ? 'bg-sky-600 hover:bg-sky-700 text-white cursor-pointer hover:shadow-md'
-              : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
-          }`}
-        >
-          {timeExpired ? (
-            <span>Window Expired</span>
-          ) : isSubmitting ? (
-            <span>Evaluating with Server...</span>
-          ) : isComplete ? (
-            <span>Confirm & Dispatch (3/3) ✓</span>
-          ) : (
-            <span>Select 3 Incidents ({selectedIds.length}/3)</span>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-[11px] font-mono px-2 py-0.5 rounded-[var(--radius-sm)] border border-[var(--border-hairline)] bg-[var(--surface-raised)] hover:bg-[var(--surface)] text-[var(--text-mid)] font-semibold transition-colors cursor-pointer"
+            >
+              ✕ Close
+            </button>
           )}
-        </button>
+        </div>
 
-        {/* Selected Incidents Dispatch Dock */}
-        <div className="space-y-1.5">
-          <div className="text-[11px] uppercase font-mono font-bold tracking-wider text-slate-500 flex items-center justify-between">
-            <span>DISPATCH QUEUE</span>
-            <span className="text-sky-700 font-bold">{selectedIds.length} / 3</span>
-          </div>
-
-          {selectedIds.length === 0 ? (
-            <div className="p-3 rounded-md border border-dashed border-slate-300 text-center text-xs text-slate-500 bg-slate-50">
-              Click incidents on map or list to select top 3.
+        {/* Selected Incident Details */}
+        {activeIncident ? (
+          <div className="space-y-3">
+            <div className="p-3 rounded-[var(--radius-sm)] bg-[var(--surface-raised)] border border-[var(--border-hairline)] space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] font-mono text-[var(--text-mid)]">
+                <span className="font-bold text-[var(--text-hi)]">
+                  #{activeIncident.id.toString().padStart(2, '0')}
+                </span>
+                <span className="tabular-nums font-semibold">
+                  Severity: {activeIncident.severity_score.toFixed(1)}/100
+                </span>
+              </div>
+              <h3 className="font-semibold text-[13px] text-[var(--text-hi)] leading-snug">
+                {activeIncident.title}
+              </h3>
+              <p className="text-[11px] text-[var(--text-mid)] leading-relaxed">
+                {activeIncident.description}
+              </p>
             </div>
-          ) : (
-            selectedIds.map((id) => {
-              const inc = incidents.find((i) => i.id === id);
-              if (!inc) return null;
-              return (
-                <div
-                  key={id}
-                  className="p-2 rounded-md border border-slate-200 bg-slate-50 flex items-center justify-between text-xs shadow-2xs"
-                >
-                  <div className="flex items-center space-x-2 min-w-0">
-                    <span className="w-4 h-4 rounded-full bg-sky-600 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">
-                      ✓
-                    </span>
-                    <span className="font-semibold text-slate-800 text-xs truncate">
-                      #{inc.id} {inc.title.split(' - ')[0]}
+
+            {/* Context Breakdown - Spec 1.2.9: three 0..1 bars only where arm permits */}
+            {allowSpatial && ctx ? (
+              <div className="space-y-3 p-3 rounded-[var(--radius-sm)] bg-[var(--surface)] border border-[var(--border-hairline)]">
+                <div className="text-[11px] font-mono uppercase tracking-wider text-[var(--text-mid)] font-bold">
+                  Context Breakdown (0..1)
+                </div>
+
+                {/* Population Bar */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-[var(--text-hi)] font-medium">Population Exposure</span>
+                    <span className="font-mono text-[var(--text-mid)] tabular-nums">
+                      {popIndex.toFixed(2)}
                     </span>
                   </div>
-                  <span className="font-mono font-bold text-sky-700 bg-sky-100/60 px-1.5 py-0.5 rounded border border-sky-200 text-xs pl-2">
-                    {inc.display_score.toFixed(1)}
+                  <div className="w-full h-2 bg-[var(--surface-raised)] rounded-[2px] overflow-hidden border border-[var(--border-hairline)]">
+                    <div
+                      className="h-full bg-[var(--accent)] rounded-[1px] transition-all duration-200"
+                      style={{ width: `${Math.min(100, Math.max(0, popIndex * 100))}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-[var(--text-low)] tabular-nums font-mono">
+                    ~{(ctx.population_exposed / 1000).toFixed(0)}k residents in outage zone
                   </span>
                 </div>
-              );
-            })
-          )}
-        </div>
 
-        {/* Active Incident Inspector & ECharts Profiling */}
-        {activeIncident && (
-          <div className="p-3 rounded-lg border border-slate-200 bg-white space-y-2.5 shadow-2xs">
-            <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
-              <span className="font-bold text-slate-900 text-xs truncate">
-                #{activeIncident.id} {activeIncident.title.split(' - ')[0]}
-              </span>
-              <span className="font-mono text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">
-                {activeIncident.display_score.toFixed(1)} pts
-              </span>
-            </div>
-
-            <p className="text-[11px] text-slate-600 leading-normal line-clamp-2">
-              {activeIncident.description}
-            </p>
-
-            {/* ECharts Spatial Risk Vector Radar Profile */}
-            <div className="p-2 rounded-md bg-slate-900 border border-slate-800 space-y-1">
-              <div className="text-[9px] font-mono uppercase font-bold text-slate-400 flex justify-between">
-                <span>ECharts Multi-Vector Risk Profile</span>
-                <span className="text-sky-400">#JPR-{activeIncident.id.toString().padStart(3, '0')}</span>
-              </div>
-              <IncidentRadarChart incident={activeIncident} height={145} />
-            </div>
-
-            {/* Raw Context Metrics */}
-            <div className="grid grid-cols-2 gap-1.5 pt-1 text-[10px] text-slate-600 font-mono">
-              <div>Severity: <strong className="text-slate-900">{activeIncident.severity_score}/100</strong></div>
-              <div>Experiment pop. est.: <strong className="text-slate-900">{(activeIncident.context.population_exposed / 1000).toFixed(1)}k</strong></div>
-              <div>Hospitals: <strong className="text-slate-900">{activeIncident.context.hospital_count} in zone</strong></div>
-              <div>Road Reach: <strong className="text-slate-900">{activeIncident.context.nearest_road_distance_m.toFixed(0)}m</strong></div>
-            </div>
-            <p className="text-[9px] text-slate-500">Population exposure is the historical synthetic experiment estimate; it is separate from the map surface.</p>
-
-            {/* Why This Incident Explainability Trigger */}
-            {onInspectWhy && (
-              <div className="pt-1.5">
-                <button
-                  type="button"
-                  onClick={() => onInspectWhy(activeIncident)}
-                  className="w-full py-1.5 px-2.5 rounded border border-sky-300 bg-sky-50/80 hover:bg-sky-100 text-sky-800 text-[11px] font-semibold flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
-                >
-                  <span>Why This Incident?</span>
-                  <span className="font-mono text-[10px] text-sky-600">
-                    ({variant === 'spatial_impact' ? 'S_B Breakdown' : 'S_A Breakdown'})
+                {/* Facility Vulnerability Bar */}
+                <div className="space-y-1 pt-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-[var(--text-hi)] font-medium">Facility Proximity</span>
+                    <span className="font-mono text-[var(--text-mid)] tabular-nums">
+                      {facIndex.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-[var(--surface-raised)] rounded-[2px] overflow-hidden border border-[var(--border-hairline)]">
+                    <div
+                      className="h-full bg-[var(--bad)] rounded-[1px] transition-all duration-200"
+                      style={{ width: `${Math.min(100, Math.max(0, facIndex * 100))}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-[var(--text-low)] tabular-nums font-mono">
+                    {ctx.hospital_count} hospitals, {ctx.fire_station_count} fire stations
                   </span>
-                  <span>🔍</span>
-                </button>
+                </div>
+
+                {/* Road Access Degradation Bar */}
+                <div className="space-y-1 pt-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-[var(--text-hi)] font-medium">Road Accessibility Deficit</span>
+                    <span className="font-mono text-[var(--text-mid)] tabular-nums">
+                      {accIndex.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-[var(--surface-raised)] rounded-[2px] overflow-hidden border border-[var(--border-hairline)]">
+                    <div
+                      className="h-full bg-[var(--warn)] rounded-[1px] transition-all duration-200"
+                      style={{ width: `${Math.min(100, Math.max(0, accIndex * 100))}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-[var(--text-low)] font-mono">
+                    Isolation index: {accIndex.toFixed(2)} ({accIndex > 0.6 ? 'Severe' : accIndex > 0.3 ? 'Moderate' : 'Low'} delay)
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="p-3 rounded-[var(--radius-sm)] bg-[var(--surface-raised)] border border-[var(--border-hairline)] text-center text-[11px] text-[var(--text-mid)]">
+                Control arm strategy (S_A): Prioritization strictly evaluated by SCADA telemetry severity.
               </div>
             )}
           </div>
+        ) : (
+          <div className="p-4 text-center text-[var(--text-low)]">No incident selected</div>
         )}
+      </div>
+
+      {/* Dispatch Submission Action Footer */}
+      <div className="p-4 border-t border-[var(--border-hairline)] bg-[var(--surface)] space-y-2 shrink-0">
+        <div className="flex items-center justify-between text-[11px] font-mono text-[var(--text-mid)]">
+          <span>Remaining: {timeFormatted}</span>
+          <span className="tabular-nums font-bold text-[var(--text-hi)]">{selectedIds.length}/3 selected</span>
+        </div>
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={!isComplete || isSubmitting || timeExpired}
+          className={`w-full py-2.5 px-3 rounded-[var(--radius-sm)] text-[12px] font-bold text-center transition-all cursor-pointer ${
+            isComplete && !timeExpired && !isSubmitting
+              ? 'bg-[var(--accent)] text-white hover:opacity-90 shadow-xs'
+              : 'bg-[var(--surface-raised)] text-[var(--text-low)] border border-[var(--border-hairline)] cursor-not-allowed'
+          }`}
+        >
+          {isComplete ? 'Review & Submit Dispatch' : 'Pick 3 to submit'}
+        </button>
       </div>
     </aside>
   );

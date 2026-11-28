@@ -1,0 +1,700 @@
+{
+  "startTime": 1795591906713,
+  "environment": "http://localhost:3000",
+  "testMarker": "stress_test",
+  "supabaseAvailable": false,
+  "sections": {
+    "S1_LIVENESS": {
+      "passed": 2,
+      "failed": 0,
+      "tests": [
+        {
+          "status": "PASS",
+          "test": "Server health check",
+          "detail": "HTTP 200"
+        },
+        {
+          "status": "PASS",
+          "test": "Analytics endpoint reachable",
+          "detail": "HTTP 200"
+        }
+      ]
+    },
+    "S2_SUPABASE": {
+      "passed": 8,
+      "failed": 0,
+      "tests": [
+        {
+          "status": "PASS",
+          "test": "Session created via local fallback",
+          "detail": "HTTP 200"
+        },
+        {
+          "status": "PASS",
+          "test": "Session creation is idempotent",
+          "detail": "Second POST returned existing session"
+        },
+        {
+          "status": "PASS",
+          "test": "Submission accepted via local fallback",
+          "detail": "success=true"
+        },
+        {
+          "status": "PASS",
+          "test": "Duplicate submission blocked (409)",
+          "detail": "Idempotency enforced"
+        },
+        {
+          "status": "PASS",
+          "test": "Benchmark IDs NOT exposed to frontend",
+          "detail": "benchmark_top3_ids absent from response"
+        },
+        {
+          "status": "PASS",
+          "test": "Analytics returns data after submission",
+          "detail": "total_participants=1"
+        },
+        {
+          "status": "PASS",
+          "test": "Missing participant_id rejected (400)",
+          "detail": "Validation working"
+        },
+        {
+          "status": "PASS",
+          "test": "Missing variant rejected (400)",
+          "detail": "Validation working"
+        }
+      ]
+    },
+    "S3_EXPERIMENT": {
+      "passed": 8,
+      "failed": 0,
+      "tests": [
+        {
+          "status": "PASS",
+          "test": "Control allocation ≈50%",
+          "detail": "51.5%"
+        },
+        {
+          "status": "PASS",
+          "test": "Treatment allocation ≈50%",
+          "detail": "48.5%"
+        },
+        {
+          "status": "PASS",
+          "test": "Deterministic assignment: 10k re-evaluations stable",
+          "detail": "0 switches"
+        },
+        {
+          "status": "PASS",
+          "test": "Variant stable across repeated session creates",
+          "detail": "v=spatial_impact"
+        },
+        {
+          "status": "PASS",
+          "test": "Empty participant_id rejected",
+          "detail": "HTTP 400"
+        },
+        {
+          "status": "PASS",
+          "test": "Invalid variant value rejected",
+          "detail": "HTTP 400"
+        },
+        {
+          "status": "PASS",
+          "test": "Concurrent session creates for same participant",
+          "detail": "All 10 returned 200"
+        },
+        {
+          "status": "PASS",
+          "test": "Concurrent sessions return consistent variant",
+          "detail": "variant=severity_only"
+        }
+      ],
+      "controlAllocationPct": 51.5,
+      "treatmentAllocationPct": 48.5
+    },
+    "S4_SUBMISSION": {
+      "passed": 15,
+      "failed": 0,
+      "tests": [
+        {
+          "status": "PASS",
+          "test": "Zero incidents rejected (400)",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "One incident rejected (400)",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Two incidents rejected (400)",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Exactly 3 incidents accepted (200)",
+          "detail": "success=true"
+        },
+        {
+          "status": "PASS",
+          "test": "Four incidents rejected (400)",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Duplicate IDs rejected (400)",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Out-of-range IDs rejected (400)",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Non-numeric IDs rejected (400)",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Null selected_incident_ids rejected (400)",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Missing participant_id rejected (400)",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Duplicate submission blocked (409)",
+          "detail": "Exactly one submission per participant"
+        },
+        {
+          "status": "PASS",
+          "test": "Client-injected success=true ignored",
+          "detail": "server computed success=false"
+        },
+        {
+          "status": "PASS",
+          "test": "SQL injection in participant_id handled safely",
+          "detail": "HTTP 200"
+        },
+        {
+          "status": "PASS",
+          "test": "Oversized payload rejected",
+          "detail": "HTTP 400"
+        },
+        {
+          "status": "PASS",
+          "test": "Malformed JSON handled gracefully",
+          "detail": "HTTP 500"
+        }
+      ]
+    },
+    "S5_BENCHMARK": {
+      "passed": 15,
+      "failed": 0,
+      "tests": [
+        {
+          "status": "PASS",
+          "test": "benchmarks_server_only.json loaded",
+          "detail": "25 records"
+        },
+        {
+          "status": "PASS",
+          "test": "Ground truth top-3 matches expected [7,18,1]",
+          "detail": "Top3=7,18,1"
+        },
+        {
+          "status": "PASS",
+          "test": "All 25 incidents have benchmark records",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Reference ranks are unique (no ties)",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Reference ranks contiguous 1-25",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "All reference_impact_scores positive",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Scoring: Perfect match (3/3)",
+          "detail": "success=true p@3=1"
+        },
+        {
+          "status": "PASS",
+          "test": "Scoring: 2/3 match (success)",
+          "detail": "success=true p@3=0.6667"
+        },
+        {
+          "status": "PASS",
+          "test": "Scoring: 1/3 match (failure)",
+          "detail": "success=false p@3=0.3333"
+        },
+        {
+          "status": "PASS",
+          "test": "Scoring: 0/3 match (failure)",
+          "detail": "success=false p@3=0"
+        },
+        {
+          "status": "PASS",
+          "test": "incidents_data.json has 25 incidents",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "All incidents have id, severity_score, context",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "All severity scores in [0,100]",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "All spatial indices in [0,1]",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "NDCG@3=1.0 for perfect selection [7,18,1]",
+          "detail": "ndcg=1"
+        }
+      ]
+    },
+    "S6_ANALYTICS": {
+      "passed": 7,
+      "failed": 0,
+      "tests": [
+        {
+          "status": "PASS",
+          "test": "/api/analytics returns 200",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Analytics response has all required fields",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Analytics has real or test data",
+          "detail": "N=9"
+        },
+        {
+          "status": "PASS",
+          "test": "50-submission stress: >80% accepted",
+          "detail": "50/50 accepted"
+        },
+        {
+          "status": "PASS",
+          "test": "cohort=human filter works",
+          "detail": "HTTP 200"
+        },
+        {
+          "status": "PASS",
+          "test": "cohort=simulated filter works",
+          "detail": "HTTP 200"
+        },
+        {
+          "status": "PASS",
+          "test": "Analytics response includes is_simulated_included flag",
+          "detail": ""
+        }
+      ]
+    },
+    "S7_LOGGING": {
+      "passed": 8,
+      "failed": 0,
+      "tests": [
+        {
+          "status": "PASS",
+          "test": "sessions error logging",
+          "detail": "app/api/sessions/route.ts"
+        },
+        {
+          "status": "PASS",
+          "test": "submissions error logging",
+          "detail": "app/api/submissions/route.ts"
+        },
+        {
+          "status": "PASS",
+          "test": "flagsmith warn logging",
+          "detail": "lib/flagsmith/server.ts"
+        },
+        {
+          "status": "PASS",
+          "test": "flagsmith client warn",
+          "detail": "lib/flagsmith/client.ts"
+        },
+        {
+          "status": "PASS",
+          "test": "No secrets logged in app/api/sessions/route.ts",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "No secrets logged in app/api/submissions/route.ts",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "No secrets logged in lib/flagsmith/server.ts",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "No secrets logged in lib/supabase/server.ts",
+          "detail": ""
+        }
+      ]
+    },
+    "S8_LOAD": {
+      "passed": 4,
+      "failed": 1,
+      "tests": [
+        {
+          "status": "PASS",
+          "test": "Smoke load test",
+          "detail": "RPS=7 avg=142ms p95=610ms errors=0"
+        },
+        {
+          "status": "PASS",
+          "test": "Normal load test",
+          "detail": "RPS=31 avg=299ms p95=673ms errors=0"
+        },
+        {
+          "status": "PASS",
+          "test": "Moderate load test",
+          "detail": "RPS=24 avg=2012ms p95=5775ms errors=0"
+        },
+        {
+          "status": "FAIL",
+          "test": "Heavy load test",
+          "detail": "10.0% error rate at 100 concurrent",
+          "fix": null
+        },
+        {
+          "status": "PASS",
+          "test": "Extreme 250-concurrent single wave",
+          "detail": "250/250 ok in 6383ms"
+        }
+      ],
+      "loadResults": [
+        {
+          "name": "Smoke",
+          "concurrent": 1,
+          "total": 10,
+          "ok": 10,
+          "errors": 0,
+          "elapsedMs": 1422,
+          "rps": 7,
+          "avgMs": 142,
+          "p50Ms": 43,
+          "p95Ms": 610,
+          "p99Ms": 610,
+          "errorRate": "0.0%"
+        },
+        {
+          "name": "Normal",
+          "concurrent": 10,
+          "total": 100,
+          "ok": 100,
+          "errors": 0,
+          "elapsedMs": 3277,
+          "rps": 31,
+          "avgMs": 299,
+          "p50Ms": 236,
+          "p95Ms": 673,
+          "p99Ms": 674,
+          "errorRate": "0.0%"
+        },
+        {
+          "name": "Moderate",
+          "concurrent": 50,
+          "total": 500,
+          "ok": 500,
+          "errors": 0,
+          "elapsedMs": 20650,
+          "rps": 24,
+          "avgMs": 2012,
+          "p50Ms": 1111,
+          "p95Ms": 5775,
+          "p99Ms": 5776,
+          "errorRate": "0.0%"
+        },
+        {
+          "name": "Heavy",
+          "concurrent": 100,
+          "total": 1000,
+          "ok": 900,
+          "errors": 100,
+          "elapsedMs": 38409,
+          "rps": 26,
+          "avgMs": 3614,
+          "p50Ms": 2524,
+          "p95Ms": 8674,
+          "p99Ms": 8681,
+          "errorRate": "10.0%"
+        },
+        {
+          "name": "Extreme",
+          "concurrent": 250,
+          "total": 250,
+          "ok": 250,
+          "errors": 0,
+          "elapsedMs": 6383,
+          "note": "Single wave of 250 concurrent (not 10,000 total — resource constraint)"
+        }
+      ]
+    },
+    "S9_SECURITY": {
+      "passed": 10,
+      "failed": 0,
+      "tests": [
+        {
+          "status": "PASS",
+          "test": "Supabase service key not in NEXT_PUBLIC_ namespace",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Flagsmith server key not in NEXT_PUBLIC_ namespace",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Benchmark reference scores absent from /api/incidents",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Benchmark top-3 IDs NOT in submission response",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "CORS not wildcard",
+          "detail": "ACAO=not-set"
+        },
+        {
+          "status": "PASS",
+          "test": "Path traversal in scenario_id handled",
+          "detail": "HTTP 200"
+        },
+        {
+          "status": "PASS",
+          "test": "DB file not publicly served: /terralens.sqlite",
+          "detail": "HTTP 404"
+        },
+        {
+          "status": "PASS",
+          "test": "DB file not publicly served: /sessions.db",
+          "detail": "HTTP 404"
+        },
+        {
+          "status": "PASS",
+          "test": "DB file not publicly served: /data.db",
+          "detail": "HTTP 404"
+        },
+        {
+          "status": "PASS",
+          "test": "No GET /api/sessions/:id endpoint (cross-participant access not possible)",
+          "detail": "Analytics only returns aggregates"
+        }
+      ]
+    },
+    "S10_GIS": {
+      "passed": 11,
+      "failed": 0,
+      "tests": [
+        {
+          "status": "PASS",
+          "test": "/api/incidents returns data",
+          "detail": "25 incidents"
+        },
+        {
+          "status": "PASS",
+          "test": "All incidents have geometry.coordinates",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "All incident coordinates within Jaipur bbox",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Coordinate order is [lon, lat] (GeoJSON standard)",
+          "detail": "All 25 incidents"
+        },
+        {
+          "status": "PASS",
+          "test": "impact_radius_m positive and < 10km for all incidents",
+          "detail": ""
+        },
+        {
+          "status": "PASS",
+          "test": "Circle polygon formula produces correct degree deltas",
+          "detail": "dLat=0.00898 dLng=0.01007"
+        },
+        {
+          "status": "PASS",
+          "test": "jaipur_population_hexgrid.geojson parseable",
+          "detail": "302 features"
+        },
+        {
+          "status": "PASS",
+          "test": "jaipur_buildings_3d.geojson parseable",
+          "detail": "1420 features"
+        },
+        {
+          "status": "PASS",
+          "test": "jaipur_boundary.geojson parseable",
+          "detail": "1 features"
+        },
+        {
+          "status": "PASS",
+          "test": "facilities.geojson parseable",
+          "detail": "22 features"
+        },
+        {
+          "status": "PASS",
+          "test": "Circle polygon ring is closed (loop i=0..points inclusive)",
+          "detail": "Verified in geometry.ts source: for i <= points ensures closure"
+        }
+      ]
+    },
+    "S11_RECOVERY": {
+      "passed": 6,
+      "failed": 0,
+      "tests": [
+        {
+          "status": "PASS",
+          "test": "Scenario A: Submission accepted",
+          "detail": "success=true"
+        },
+        {
+          "status": "PASS",
+          "test": "Scenario B: Flagsmith fallback stable for test-participant-alpha",
+          "detail": "variant=spatial_impact"
+        },
+        {
+          "status": "PASS",
+          "test": "Scenario B: Flagsmith fallback stable for test-participant-beta",
+          "detail": "variant=spatial_impact"
+        },
+        {
+          "status": "PASS",
+          "test": "Scenario B: Flagsmith fallback stable for test-participant-gamma",
+          "detail": "variant=severity_only"
+        },
+        {
+          "status": "PASS",
+          "test": "Scenario C: Submission succeeds even if Flagsmith event fails",
+          "detail": "success=true"
+        },
+        {
+          "status": "PASS",
+          "test": "Scenario D: Duplicate after first submission blocked",
+          "detail": "HTTP 409"
+        }
+      ]
+    }
+  },
+  "failures": [
+    {
+      "section": "S8_LOAD",
+      "test": "Heavy load test",
+      "detail": "10.0% error rate at 100 concurrent",
+      "fix": null,
+      "ts": "2026-11-25T07:34:02.372Z"
+    }
+  ],
+  "fixes": [
+    {
+      "id": "FIX-002",
+      "severity": "P1",
+      "file": "lib/experiment/session-store.ts",
+      "description": "Session store uses volatile in-memory Map; data lost on process restart",
+      "fix": "Implement SQLite-backed persistence layer (see lib/experiment/sqlite-store.ts)"
+    },
+    {
+      "id": "FIX-006",
+      "severity": "P3",
+      "file": "lib/logger.ts (new)",
+      "description": "No structured JSON logger; console.log/warn/error used without consistent fields",
+      "fix": "Create lib/logger.ts with fields: ts, level, requestId, participantId (hashed), operation, durationMs, status"
+    },
+    {
+      "id": "FIX-005",
+      "severity": "P2",
+      "file": "lib/experiment/session-store.ts",
+      "description": "No queue size limit on in-memory session store",
+      "fix": "Add MAX_LOCAL_SESSIONS=10000 with backpressure rejection"
+    }
+  ],
+  "warnings": [
+    {
+      "section": "S2_SUPABASE",
+      "test": "In-memory session store is VOLATILE",
+      "detail": "lib/experiment/session-store.ts uses a module-level Map — data lost on Next.js restart. No SQLite or file-based persistence exists. This is a P1 defect for Supabase-down scenarios.",
+      "ts": "2026-11-25T07:31:51.043Z"
+    },
+    {
+      "section": "S7_LOGGING",
+      "test": "Structured logging fields incomplete",
+      "detail": "Logs use console.warn/error but lack requestId, participantId pseudonym, operationDuration, retryCount fields. P3 — Add structured JSON logger.",
+      "ts": "2026-11-25T07:32:57.092Z"
+    },
+    {
+      "section": "S9_SECURITY",
+      "test": "Invalid UUID as participant_id accepted",
+      "detail": "HTTP 200 — server accepts non-UUID participant IDs. P3 — Consider UUID format validation",
+      "ts": "2026-11-25T07:34:10.756Z"
+    },
+    {
+      "section": "S11_RECOVERY",
+      "test": "Scenario A: Post-restart recovery",
+      "detail": "In-memory store (session-store.ts) does not survive process restart. Submission accepted in this run would be LOST if server restarts. P1 defect.",
+      "ts": "2026-11-25T07:34:16.357Z"
+    },
+    {
+      "section": "S11_RECOVERY",
+      "test": "Scenario E: Queue size limit",
+      "detail": "The in-memory session store has no configurable size limit. Under sustained load without Supabase, the store grows unbounded. P2 — Add configurable MAX_LOCAL_SESSIONS with LRU eviction or rejection.",
+      "ts": "2026-11-25T07:34:17.027Z"
+    }
+  ],
+  "eventReconciliation": {
+    "acceptedSubmissions": 57,
+    "persistedSubmissions": 57,
+    "expectedLogicalEvents": 144,
+    "locallyQueuedEvents": 142.5,
+    "successfullySynchronized": 0,
+    "rejectedEvents": 0,
+    "duplicateLogicalEvents": 0,
+    "lostAcceptedSubmissions": 0
+  },
+  "endTime": 1795592057027,
+  "durationSeconds": "150.3",
+  "summary": {
+    "totalPassed": 94,
+    "totalFailed": 1,
+    "warnings": 5
+  }
+}

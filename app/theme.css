@@ -1,0 +1,60 @@
+/* ==========================================================================
+   TerraLens Design Tokens
+   Light-theme operator console tokens. No hex values permitted in components.
+   ========================================================================== */
+
+:root {
+  /* Surfaces */
+  --bg: #F7F9FC;
+  --surface: #FFFFFF;
+  --surface-raised: #F1F5F9;
+  --border-hairline: #E2E8F0;
+
+  /* Typography Colors */
+  --text-hi: #0F172A;   /* Primary high-contrast text (>4.5:1 on surface) */
+  --text-mid: #475569;  /* Secondary readable text (4.6:1 on surface) */
+  --text-low: #94A3B8;  /* Subtle annotations, disabled borders */
+
+  /* Accents & Status */
+  --accent: #0EA5E9;
+  --ok: #059669;
+  --warn: #D97706;
+  --bad: #E11D48;
+
+  /* Arm Semantic Colors (Consistent across map, table, charts, badges) */
+  --control: #64748B;   /* Slate */
+  --treatment: #0284C7; /* Cyan / Sky */
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+
+  /* Elevation Shadows (only on floating panels) */
+  --shadow-floating: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.06);
+
+  /* Typography & Tabular Numerals */
+  --font-tabular: tabular-nums;
+  --line-height: 1.4;
+}
+
+/* Tabular figures on all numbers and stats */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Global Light Surface Base */
+body {
+  background-color: var(--bg);
+  color: var(--text-hi);
+  line-height: var(--line-height);
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
