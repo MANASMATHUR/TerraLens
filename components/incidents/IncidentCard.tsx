@@ -49,8 +49,7 @@ export default function IncidentCard({
   const severityPct = Math.min(100, Math.max(0, (severityScore / 100) * 100));
 
   return (
-    <button
-      type="button"
+    <div
       onClick={() => onToggle(incident.id)}
       onMouseEnter={() => onHover?.(incident.id)}
       onMouseLeave={() => onHover?.(null)}
@@ -152,6 +151,6 @@ export default function IncidentCard({
           )}
         </div>
       </div>
-    </button>
+    </div>
   );
 }
