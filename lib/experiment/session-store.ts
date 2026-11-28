@@ -27,26 +27,11 @@ const DB_PATH = path.join(DATA_DIR, 'terralens_local.db');
 
 let dbInstance: DatabaseSync | null = null;
 
-function getDb(): DatabaseSync {
-  if (dbInstance) return dbInstance;
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-  } catch (err) {
-    console.warn('[SessionStore] Could not create DATA_DIR, attempting /tmp fallback:', err);
-    const tmpData = path.join('/tmp', '.data');
-    if (!fs.existsSync(tmpData)) fs.mkdirSync(tmpData, { recursive: true });
-    return new DatabaseSync(path.join(tmpData, 'terralens_local.db'));
-  }
-
-  const db = new DatabaseSync(DB_PATH);
-  // Configure WAL mode and busy timeout for high-concurrency resilience
+function initDbTables(db: DatabaseSync) {
   db.exec('PRAGMA journal_mode = WAL;');
   db.exec('PRAGMA synchronous = NORMAL;');
   db.exec('PRAGMA busy_timeout = 5000;');
 
-  // Schema for transactional session persistence
   db.exec(`
     CREATE TABLE IF NOT EXISTS local_sessions (
       participant_id TEXT NOT NULL,
@@ -70,7 +55,6 @@ function getDb(): DatabaseSync {
     );
   `);
 
-  // Ensure migration columns exist on already-created tables
   try {
     db.exec("ALTER TABLE local_sessions ADD COLUMN assignment_source TEXT DEFAULT 'deterministic_fallback';");
   } catch {}
@@ -100,115 +84,176 @@ function getDb(): DatabaseSync {
     );
   `);
 
-  // Initialize metrics keys if absent
   db.exec(`
     INSERT OR IGNORE INTO local_metrics (key, value) VALUES ('duplicate_blocked', 0);
     INSERT OR IGNORE INTO local_metrics (key, value) VALUES ('failed_submissions', 0);
     INSERT OR IGNORE INTO local_metrics (key, value) VALUES ('events_dispatched', 0);
   `);
+}
 
-  dbInstance = db;
-  return db;
+// In-memory fallback map if SQLite filesystem is completely unavailable
+const memorySessions = new Map<string, LocalSession>();
+
+function getDb(): DatabaseSync | null {
+  if (dbInstance) return dbInstance;
+  
+  let targetPath = DB_PATH;
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    const db = new DatabaseSync(targetPath);
+    initDbTables(db);
+    dbInstance = db;
+    return db;
+  } catch (err) {
+    console.warn('[SessionStore] Error creating primary DB at', targetPath, 'falling back to /tmp:', err);
+    try {
+      const tmpData = path.join('/tmp', '.data');
+      if (!fs.existsSync(tmpData)) fs.mkdirSync(tmpData, { recursive: true });
+      targetPath = path.join(tmpData, 'terralens_local.db');
+      const db = new DatabaseSync(targetPath);
+      initDbTables(db);
+      dbInstance = db;
+      return db;
+    } catch (tmpErr) {
+      console.error('[SessionStore] SQLite totally unavailable in this environment, using in-memory store:', tmpErr);
+      return null;
+    }
+  }
 }
 
 export function getLocalSession(participantId: string, scenarioId: string): LocalSession | undefined {
   const db = getDb();
-  const stmt = db.prepare('SELECT * FROM local_sessions WHERE participant_id = ? AND scenario_id = ?');
-  const row = stmt.get(participantId, scenarioId) as any;
-  if (!row) return undefined;
+  if (!db) {
+    return memorySessions.get(`${participantId}:${scenarioId}`);
+  }
+  try {
+    const stmt = db.prepare('SELECT * FROM local_sessions WHERE participant_id = ? AND scenario_id = ?');
+    const row = stmt.get(participantId, scenarioId) as any;
+    if (!row) return undefined;
 
-  return {
-    id: row.id || row.participant_id,
-    participant_id: row.participant_id,
-    scenario_id: row.scenario_id,
-    variant: row.variant,
-    started_at: row.started_at,
-    completed_at: row.completed_at,
-    duration_seconds: row.duration_seconds,
-    successful: row.successful === null ? null : Boolean(row.successful),
-    selected_incident_ids: row.selected_incident_ids ? JSON.parse(row.selected_incident_ids) : null,
-    precision_at_3: row.precision_at_3,
-    ndcg_at_3: row.ndcg_at_3,
-    flagsmith_event_status: row.flagsmith_event_status,
-    is_simulated: Boolean(row.is_simulated),
-    assignment_source: row.assignment_source || 'deterministic_fallback',
-    flagsmith_exposure_recorded: Boolean(row.flagsmith_exposure_recorded),
-  };
+    return {
+      id: row.id || row.participant_id,
+      participant_id: row.participant_id,
+      scenario_id: row.scenario_id,
+      variant: row.variant,
+      started_at: row.started_at,
+      completed_at: row.completed_at,
+      duration_seconds: row.duration_seconds,
+      successful: row.successful === null ? null : Boolean(row.successful),
+      selected_incident_ids: row.selected_incident_ids ? JSON.parse(row.selected_incident_ids) : null,
+      precision_at_3: row.precision_at_3,
+      ndcg_at_3: row.ndcg_at_3,
+      flagsmith_event_status: row.flagsmith_event_status,
+      is_simulated: Boolean(row.is_simulated),
+      assignment_source: row.assignment_source || 'deterministic_fallback',
+      flagsmith_exposure_recorded: Boolean(row.flagsmith_exposure_recorded),
+    };
+  } catch (err) {
+    console.warn('[SessionStore] getLocalSession query failed, checking memory:', err);
+    return memorySessions.get(`${participantId}:${scenarioId}`);
+  }
 }
 
 export function saveLocalSession(session: LocalSession): void {
-  const db = getDb();
-  const stmt = db.prepare(`
-    INSERT INTO local_sessions (
-      participant_id, scenario_id, id, variant, started_at, completed_at,
-      duration_seconds, successful, selected_incident_ids, precision_at_3,
-      ndcg_at_3, flagsmith_event_status, is_simulated, assignment_source,
-      flagsmith_exposure_recorded
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT (participant_id, scenario_id) DO UPDATE SET
-      completed_at = coalesce(excluded.completed_at, local_sessions.completed_at),
-      duration_seconds = coalesce(excluded.duration_seconds, local_sessions.duration_seconds),
-      successful = coalesce(excluded.successful, local_sessions.successful),
-      selected_incident_ids = coalesce(excluded.selected_incident_ids, local_sessions.selected_incident_ids),
-      precision_at_3 = coalesce(excluded.precision_at_3, local_sessions.precision_at_3),
-      ndcg_at_3 = coalesce(excluded.ndcg_at_3, local_sessions.ndcg_at_3),
-      flagsmith_event_status = coalesce(excluded.flagsmith_event_status, local_sessions.flagsmith_event_status),
-      assignment_source = coalesce(excluded.assignment_source, local_sessions.assignment_source),
-      flagsmith_exposure_recorded = coalesce(excluded.flagsmith_exposure_recorded, local_sessions.flagsmith_exposure_recorded);
-  `);
+  // Always keep in-memory fallback updated
+  memorySessions.set(`${session.participant_id}:${session.scenario_id}`, session);
 
-  stmt.run(
-    session.participant_id,
-    session.scenario_id,
-    session.id || session.participant_id,
-    session.variant,
-    session.started_at,
-    session.completed_at,
-    session.duration_seconds,
-    session.successful === null || session.successful === undefined ? null : (session.successful ? 1 : 0),
-    session.selected_incident_ids ? JSON.stringify(session.selected_incident_ids) : null,
-    session.precision_at_3 || null,
-    session.ndcg_at_3 || null,
-    session.flagsmith_event_status || 'dispatched',
-    session.is_simulated ? 1 : 0,
-    session.assignment_source || 'deterministic_fallback',
-    session.flagsmith_exposure_recorded ? 1 : 0
-  );
+  const db = getDb();
+  if (!db) return;
+
+  try {
+    const stmt = db.prepare(`
+      INSERT INTO local_sessions (
+        participant_id, scenario_id, id, variant, started_at, completed_at,
+        duration_seconds, successful, selected_incident_ids, precision_at_3,
+        ndcg_at_3, flagsmith_event_status, is_simulated, assignment_source,
+        flagsmith_exposure_recorded
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT (participant_id, scenario_id) DO UPDATE SET
+        completed_at = coalesce(excluded.completed_at, local_sessions.completed_at),
+        duration_seconds = coalesce(excluded.duration_seconds, local_sessions.duration_seconds),
+        successful = coalesce(excluded.successful, local_sessions.successful),
+        selected_incident_ids = coalesce(excluded.selected_incident_ids, local_sessions.selected_incident_ids),
+        precision_at_3 = coalesce(excluded.precision_at_3, local_sessions.precision_at_3),
+        ndcg_at_3 = coalesce(excluded.ndcg_at_3, local_sessions.ndcg_at_3),
+        flagsmith_event_status = coalesce(excluded.flagsmith_event_status, local_sessions.flagsmith_event_status),
+        assignment_source = coalesce(excluded.assignment_source, local_sessions.assignment_source),
+        flagsmith_exposure_recorded = coalesce(excluded.flagsmith_exposure_recorded, local_sessions.flagsmith_exposure_recorded);
+    `);
+
+    stmt.run(
+      session.participant_id,
+      session.scenario_id,
+      session.id || session.participant_id,
+      session.variant,
+      session.started_at,
+      session.completed_at,
+      session.duration_seconds,
+      session.successful === null || session.successful === undefined ? null : (session.successful ? 1 : 0),
+      session.selected_incident_ids ? JSON.stringify(session.selected_incident_ids) : null,
+      session.precision_at_3 || null,
+      session.ndcg_at_3 || null,
+      session.flagsmith_event_status || 'dispatched',
+      session.is_simulated ? 1 : 0,
+      session.assignment_source || 'deterministic_fallback',
+      session.flagsmith_exposure_recorded ? 1 : 0
+    );
+  } catch (err) {
+    console.warn('[SessionStore] saveLocalSession SQLite write failed (in-memory cached):', err);
+  }
 }
 
 export function getAllLocalSessions(): LocalSession[] {
   const db = getDb();
-  const rows = db.prepare('SELECT * FROM local_sessions').all() as any[];
-  return rows.map((row) => ({
-    id: row.id || row.participant_id,
-    participant_id: row.participant_id,
-    scenario_id: row.scenario_id,
-    variant: row.variant,
-    started_at: row.started_at,
-    completed_at: row.completed_at,
-    duration_seconds: row.duration_seconds,
-    successful: row.successful === null ? null : Boolean(row.successful),
-    selected_incident_ids: row.selected_incident_ids ? JSON.parse(row.selected_incident_ids) : null,
-    precision_at_3: row.precision_at_3,
-    ndcg_at_3: row.ndcg_at_3,
-    flagsmith_event_status: row.flagsmith_event_status,
-    is_simulated: Boolean(row.is_simulated),
-  }));
+  if (!db) {
+    return Array.from(memorySessions.values());
+  }
+  try {
+    const rows = db.prepare('SELECT * FROM local_sessions').all() as any[];
+    return rows.map((row) => ({
+      id: row.id || row.participant_id,
+      participant_id: row.participant_id,
+      scenario_id: row.scenario_id,
+      variant: row.variant,
+      started_at: row.started_at,
+      completed_at: row.completed_at,
+      duration_seconds: row.duration_seconds,
+      successful: row.successful === null ? null : Boolean(row.successful),
+      selected_incident_ids: row.selected_incident_ids ? JSON.parse(row.selected_incident_ids) : null,
+      precision_at_3: row.precision_at_3,
+      ndcg_at_3: row.ndcg_at_3,
+      flagsmith_event_status: row.flagsmith_event_status,
+      is_simulated: Boolean(row.is_simulated),
+    }));
+  } catch {
+    return Array.from(memorySessions.values());
+  }
 }
 
 export function recordBlockedDuplicate(): void {
   const db = getDb();
-  db.prepare("UPDATE local_metrics SET value = value + 1 WHERE key = 'duplicate_blocked'").run();
+  if (!db) return;
+  try {
+    db.prepare("UPDATE local_metrics SET value = value + 1 WHERE key = 'duplicate_blocked'").run();
+  } catch {}
 }
 
 export function recordFailedSubmission(): void {
   const db = getDb();
-  db.prepare("UPDATE local_metrics SET value = value + 1 WHERE key = 'failed_submissions'").run();
+  if (!db) return;
+  try {
+    db.prepare("UPDATE local_metrics SET value = value + 1 WHERE key = 'failed_submissions'").run();
+  } catch {}
 }
 
 export function recordDispatchedEvent(count: number = 1): void {
   const db = getDb();
-  db.prepare("UPDATE local_metrics SET value = value + ? WHERE key = 'events_dispatched'").run(count);
+  if (!db) return;
+  try {
+    db.prepare("UPDATE local_metrics SET value = value + ? WHERE key = 'events_dispatched'").run(count);
+  } catch {}
 }
 
 export function queueEventInOutbox(
@@ -218,23 +263,31 @@ export function queueEventInOutbox(
   payload?: any
 ): void {
   const db = getDb();
-  const id = `${participantId}_${eventName}_${Date.now()}`;
-  db.prepare(`
-    INSERT INTO event_outbox (id, participant_id, event_name, event_value, payload, created_at, status)
-    VALUES (?, ?, ?, ?, ?, ?, 'pending')
-  `).run(
-    id,
-    participantId,
-    eventName,
-    eventValue !== undefined ? eventValue : null,
-    payload ? JSON.stringify(payload) : null,
-    new Date().toISOString()
-  );
+  if (!db) return;
+  try {
+    const id = `${participantId}_${eventName}_${Date.now()}`;
+    db.prepare(`
+      INSERT INTO event_outbox (id, participant_id, event_name, event_value, payload, created_at, status)
+      VALUES (?, ?, ?, ?, ?, ?, 'pending')
+    `).run(
+      id,
+      participantId,
+      eventName,
+      eventValue ?? null,
+      payload ? JSON.stringify(payload) : null,
+      new Date().toISOString()
+    );
+  } catch {}
 }
 
 export function getPendingOutboxEvents(): any[] {
   const db = getDb();
-  return db.prepare("SELECT * FROM event_outbox WHERE status = 'pending' ORDER BY created_at ASC").all();
+  if (!db) return [];
+  try {
+    return db.prepare("SELECT * FROM event_outbox WHERE status = 'pending' ORDER BY created_at ASC").all();
+  } catch {
+    return [];
+  }
 }
 
 export function getExperimentHealthMetrics() {
@@ -252,13 +305,20 @@ export function getExperimentHealthMetrics() {
   const successfulTasks = sessions.filter((s) => s.successful === true).length;
 
   const db = getDb();
-  const failedRow = db.prepare("SELECT value FROM local_metrics WHERE key = 'failed_submissions'").get() as any;
-  const duplicateRow = db.prepare("SELECT value FROM local_metrics WHERE key = 'duplicate_blocked'").get() as any;
-  const dispatchedRow = db.prepare("SELECT value FROM local_metrics WHERE key = 'events_dispatched'").get() as any;
+  let failedSubmissionsCount = 0;
+  let duplicateAttemptsBlockedCount = 0;
+  let eventsDispatchedCount = 0;
 
-  const failedSubmissionsCount = failedRow?.value || 0;
-  const duplicateAttemptsBlockedCount = duplicateRow?.value || 0;
-  const eventsDispatchedCount = dispatchedRow?.value || 0;
+  if (db) {
+    try {
+      const failedRow = db.prepare("SELECT value FROM local_metrics WHERE key = 'failed_submissions'").get() as any;
+      const duplicateRow = db.prepare("SELECT value FROM local_metrics WHERE key = 'duplicate_blocked'").get() as any;
+      const dispatchedRow = db.prepare("SELECT value FROM local_metrics WHERE key = 'events_dispatched'").get() as any;
+      failedSubmissionsCount = failedRow?.value || 0;
+      duplicateAttemptsBlockedCount = duplicateRow?.value || 0;
+      eventsDispatchedCount = dispatchedRow?.value || 0;
+    } catch {}
+  }
 
   const failedTasks = sessions.filter((s) => s.completed_at && s.successful === false).length + failedSubmissionsCount;
 
@@ -303,6 +363,9 @@ export async function syncLocalRecordsToSupabase(supabaseClient: any): Promise<{
   }
 
   const db = getDb();
+  if (!db) {
+    return { synced: 0, failed: 0, alreadySynced: 0 };
+  }
   const pending = db.prepare("SELECT * FROM local_sessions WHERE sync_status = 'pending' AND completed_at IS NOT NULL").all() as any[];
 
   let synced = 0;
