@@ -3,6 +3,7 @@ export type ExperimentVariant = 'severity_only' | 'spatial_impact';
 export type ExperimentControlState =
   | 'connecting'
   | 'experiment_active'
+  | 'experiment_ended'
   | 'experiment_unavailable'
   | 'invalid_configuration'
   | 'experiment_not_enrolled'

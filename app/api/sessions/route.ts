@@ -38,6 +38,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid experiment variant' }, { status: 400 });
     }
 
+    const isPostExperiment = assignment_source === 'post_experiment';
+
     // Reject sessions from deterministic fallback — only Flagsmith-remote assignments are experiment observations.
     // 'cached' is accepted because it was established by a prior flagsmith_remote assignment in this browser session.
     if (assignment_source === 'deterministic_fallback') {
@@ -62,11 +64,13 @@ export async function POST(req: Request) {
 
     const strategyFlag = identityFlags.flags[STRATEGY_FLAG_NAME];
     const assignedVariant = strategyFlag?.value;
+    const inExperiment = Boolean(strategyFlag?.experiment?.inExperiment);
+
     if (
       !strategyFlag ||
       strategyFlag.isDefault ||
       !strategyFlag.enabled ||
-      !strategyFlag.experiment?.inExperiment ||
+      (!inExperiment && !isPostExperiment) ||
       !isExperimentVariant(assignedVariant)
     ) {
       return NextResponse.json({ error: 'Participant has no valid Flagsmith experiment assignment.' }, { status: 403 });

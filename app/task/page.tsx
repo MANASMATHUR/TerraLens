@@ -288,8 +288,8 @@ export default function TaskPage() {
         const assignment = await initFlagsmith(pid, savedRun?.modelConfig);
         resolvedControlState = assignment.controlState;
 
-        if (resolvedControlState !== 'experiment_active') {
-          // Fail closed — do not let participant enter the experiment.
+        if (resolvedControlState !== 'experiment_active' && resolvedControlState !== 'experiment_ended') {
+          // Fail closed — do not let participant enter unassigned/invalid states.
           setControlState(resolvedControlState);
           setIsLoading(false);
           return;
@@ -338,7 +338,8 @@ export default function TaskPage() {
             return;
           }
           // This is the exposure point: resolve and record only when the ranked variation is about to render.
-          if (!runDegradedReason) {
+          // Skip recordDisplayedExperiment if experiment has ended (post-experiment mode).
+          if (!runDegradedReason && resolvedControlState === 'experiment_active') {
             const displayed = await recordDisplayedExperiment(pid);
             const displayedVariant = displayed.variant;
             if (displayedVariant !== 'severity_only' && displayedVariant !== 'spatial_impact') {
@@ -350,7 +351,7 @@ export default function TaskPage() {
             setVariant(cachedV);
             setCachedVariant(cachedV);
           }
-          setControlState('experiment_active');
+          setControlState(resolvedControlState);
           if (cachedV === null) {
             setVariant('severity_only');
             setControlState('unassigned');
@@ -380,15 +381,17 @@ export default function TaskPage() {
     if (window.matchMedia('(max-width: 767px)').matches) setLeftCollapsed(true);
   }, []);
 
+  const isInteractiveState = controlState === 'experiment_active' || controlState === 'experiment_ended';
+
   // Tutorial time is separate from the task timer.
   useEffect(() => {
-    if (controlState !== 'experiment_active' || isLoading || taskStarted || tutorialSeconds <= 0) return;
+    if (!isInteractiveState || isLoading || taskStarted || tutorialSeconds <= 0) return;
     const timer = setInterval(() => setTutorialSeconds((value) => Math.max(0, value - 1)), 1000);
     return () => clearInterval(timer);
-  }, [tutorialSeconds, controlState, taskStarted, isLoading]);
+  }, [tutorialSeconds, isInteractiveState, taskStarted, isLoading]);
 
   useEffect(() => {
-    if (!taskStarted || !taskStartedAt || controlState !== 'experiment_active') return;
+    if (!taskStarted || !taskStartedAt || !isInteractiveState) return;
     const update = () => {
       const elapsed = Math.floor((Date.now() - new Date(taskStartedAt).getTime()) / 1000);
       const remaining = Math.max(0, 120 - elapsed);
@@ -398,7 +401,7 @@ export default function TaskPage() {
     update();
     const timer = setInterval(update, 500);
     return () => clearInterval(timer);
-  }, [taskStarted, taskStartedAt, controlState]);
+  }, [taskStarted, taskStartedAt, isInteractiveState]);
 
   useEffect(() => {
     if (!participantId || !taskStartedAt) return;
@@ -451,8 +454,8 @@ export default function TaskPage() {
         body: JSON.stringify({
           participant_id: participantId,
           variant,
-          assignment_source: 'flagsmith_remote',
-          flagsmith_exposure_recorded: !degradedReason,
+          assignment_source: controlState === 'experiment_ended' ? 'post_experiment' : 'flagsmith_remote',
+          flagsmith_exposure_recorded: controlState === 'experiment_active' && !degradedReason,
           model_config: remoteConfig,
         }),
       });
@@ -491,6 +494,7 @@ export default function TaskPage() {
           selected_incident_ids: selectedIds,
           model_config: remoteConfig,
           model_config_signature: modelConfigSignature,
+          assignment_source: controlState === 'experiment_ended' ? 'post_experiment' : 'flagsmith_remote',
         }),
       });
 
@@ -528,7 +532,7 @@ export default function TaskPage() {
   };
 
   // ── Gate screens (fail-closed state machine) ────────────────────────────────
-  if (controlState === 'connecting' || (isLoading && controlState !== 'experiment_active')) {
+  if (controlState === 'connecting' || (isLoading && !isInteractiveState)) {
     return <ConnectingScreen />;
   }
   if (controlState === 'experiment_unavailable') {
@@ -541,23 +545,31 @@ export default function TaskPage() {
     return <NotEnrolledScreen participantId={participantId} />;
   }
 
-  // ── Normal loading spinner (experiment_active, fetching incidents) ──────────
+  // ── Normal loading spinner (isInteractiveState, fetching incidents) ──────────
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans text-xs text-slate-600 space-x-2">
-        <div className="w-4 h-4 rounded-full border-2 border-sky-600 border-t-transparent animate-spin" />
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center font-sans text-xs text-[var(--text-mid)] space-x-2">
+        <div className="w-4 h-4 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
         <span>Loading Jaipur GIS Workspace…</span>
       </div>
     );
   }
 
   // Briefing modal (Spec 1.4: Dim live map behind it; countdown inside button "Start in 0:17"; one-attempt rule in amber callout)
-  const isBriefing = !taskStarted && controlState === 'experiment_active' && !isLoading;
+  const isBriefing = !taskStarted && isInteractiveState && !isLoading;
 
   return (
     <div className="h-dvh min-h-[560px] w-screen bg-[var(--bg)] flex flex-col overflow-hidden font-sans text-[var(--text-hi)]">
       {/* Top Application Bar */}
       <Header variant={variant} participantId={participantId} storageMode={storageMode} />
+
+      {/* Post-experiment notice banner (Spec item 2) */}
+      {controlState === 'experiment_ended' && (
+        <div className="bg-[var(--surface-raised)] border-b border-[var(--border-hairline)] px-4 py-1.5 text-center text-[11px] font-mono text-[var(--text-mid)] flex items-center justify-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[var(--accent)]"></span>
+          <span>Experiment complete, serving the shipped strategy. This run is not counted.</span>
+        </div>
+      )}
 
       {/* Task Sub-Header: timer mm:ss, 0/3 counter, and submit button (Spec 1.4) */}
       <div className="h-12 border-b border-[var(--border-hairline)] bg-[var(--surface)] px-4 flex items-center justify-between shrink-0 select-none">

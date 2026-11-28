@@ -130,11 +130,14 @@ export async function POST(req: Request) {
 
     const strategyFlag = identityFlags.flags[STRATEGY_FLAG_NAME];
     const assignedVariant = strategyFlag?.value;
+    const inExperiment = Boolean(strategyFlag?.experiment?.inExperiment);
+    const isPostExperiment = body.assignment_source === 'post_experiment';
+
     if (
       !strategyFlag ||
       strategyFlag.isDefault ||
       !strategyFlag.enabled ||
-      !strategyFlag.experiment?.inExperiment ||
+      (!inExperiment && !isPostExperiment) ||
       !isExperimentVariant(assignedVariant)
     ) {
       return NextResponse.json({ error: 'Participant has no valid Flagsmith experiment assignment.' }, { status: 403 });
@@ -217,11 +220,16 @@ export async function POST(req: Request) {
     }
 
     // Flagsmith owns experiment measurement; all conversion events use the participant identity.
-    const submittedSent = await trackServerEvent(participant_id, METRIC_NAMES.submitted, consequenceCapture);
-    const successSent = evalResult.successful
+    // For post-experiment sessions, send NO Flagsmith metric events.
+    const submittedSent = !isPostExperiment
+      ? await trackServerEvent(participant_id, METRIC_NAMES.submitted, consequenceCapture)
+      : false;
+    const successSent = !isPostExperiment && evalResult.successful
       ? await trackServerEvent(participant_id, METRIC_NAMES.success)
       : false;
-    const durationSent = await trackServerEvent(participant_id, METRIC_NAMES.duration, durationSeconds);
+    const durationSent = !isPostExperiment
+      ? await trackServerEvent(participant_id, METRIC_NAMES.duration, durationSeconds)
+      : false;
 
     // 7. Return Evaluation Payload (Hidden benchmark scores remain isolated on server)
     // Eligibility & cohort classification uses strictly unrounded durationSeconds <= 120

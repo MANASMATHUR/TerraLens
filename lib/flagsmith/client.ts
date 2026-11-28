@@ -65,6 +65,33 @@ export async function initFlagsmith(participantId: string, sessionConfig?: Exper
     const experimentFlag = flagsmith.getAllFlags()?.[STRATEGY_FLAG_NAME] ?? null;
     let exposureRecorded = false;
 
+    // Resolve the multivariate variant string.
+    const rawValue = experimentFlag?.value ?? flagsmith.getValue(STRATEGY_FLAG_NAME);
+
+    // If the experiment has ended or inExperiment is false, but flag has a valid variant:
+    // Enter post-experiment mode: serve the shipped strategy without counting as an experiment exposure.
+    if (
+      (rawValue === 'severity_only' || rawValue === 'spatial_impact') &&
+      experimentFlag != null &&
+      experimentFlag.experiment?.inExperiment === false
+    ) {
+      const variant: ExperimentVariant = rawValue;
+      let configValue: unknown = sessionConfig ?? null;
+      if (!sessionConfig) try {
+        const rawConfig = flagsmith.getValue(MODEL_CONFIG_FLAG_NAME);
+        configValue = typeof rawConfig === 'string' ? JSON.parse(rawConfig) : rawConfig;
+      } catch {}
+      const configResult = validateRemoteConfig(configValue, variant);
+      console.log(`[Flagsmith] experiment_ended: variant=${variant}, serving shipped strategy post-experiment.`);
+      return {
+        variant,
+        source: 'flagsmith_remote',
+        flagsmith_exposure_recorded: false,
+        controlState: 'experiment_ended',
+        remoteConfig: configResult.config,
+      };
+    }
+
     // If the flag exists but inExperiment is false, the participant is outside the traffic allocation.
     if (experimentFlag != null && experimentFlag.experiment?.inExperiment === false) {
       console.warn('[Flagsmith] Participant not enrolled in experiment traffic allocation.');
@@ -75,9 +102,6 @@ export async function initFlagsmith(participantId: string, sessionConfig?: Exper
         controlState: 'experiment_not_enrolled',
       };
     }
-
-    // Resolve the multivariate variant string.
-    const rawValue = experimentFlag?.value ?? flagsmith.getValue(STRATEGY_FLAG_NAME);
 
     // Any value other than the two known variants is a configuration error — fail closed.
     if (rawValue !== 'severity_only' && rawValue !== 'spatial_impact') {
