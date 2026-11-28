@@ -168,7 +168,7 @@ export default function JaipurMapLibre({
                 'fill-color': [
                   'interpolate',
                   ['linear'],
-                  ['get', 'population_density_norm'],
+                  ['coalesce', ['to-number', ['get', 'density']], ['to-number', ['get', 'population_density_norm']], 0.0],
                   0.0, 'transparent',
                   0.1, '#F1F5F9',
                   0.3, '#BAE6FD',
@@ -304,9 +304,10 @@ export default function JaipurMapLibre({
           id: 'incidents-top3-rank',
           type: 'symbol',
           source: 'incidents-src',
-          filter: ['all', ['has', 'display_rank'], ['<=', ['to-number', ['get', 'display_rank']], 3]] as any,
+          filter: ['all', ['has', 'display_rank'], ['<=', ['coalesce', ['to-number', ['get', 'display_rank']], 999], 3]] as any,
           layout: {
-            'text-field': ['to-string', ['get', 'display_rank']],
+            'text-field': ['to-string', ['coalesce', ['get', 'display_rank'], '']],
+            'text-font': ['Noto Sans Regular'],
             'text-size': 10,
             'text-offset': [0, -1.3],
             'text-allow-overlap': true,
