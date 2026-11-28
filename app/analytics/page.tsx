@@ -100,7 +100,7 @@ function formatChance(value: number | undefined): string {
 /** Only a readable interval explicitly included in Flagsmith's lift string can satisfy this check. */
 function flagsmithIntervalExcludesZero(lift: string): boolean | null {
   if (!/interval/i.test(lift)) return null;
-  const match = lift.match(/(?:95%[^\d+-]*)?(?:credible\s+)?interval[^\d+-]*[\[(]?\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*(?:,|\bto\b|–|—)\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*[\])]?/i);
+  const match = lift.match(/(?:95%[^\d+-]*)?(?:credible\s+)?interval[^\d+-]*[\[(]?\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))%?\s*(?:,|\bto\b|–|—)\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))%?\s*[\])]?/i);
   if (!match) return null;
   const lower = Number(match[1]);
   const upper = Number(match[2]);
