@@ -60,6 +60,7 @@ export default function JaipurMapLibre({
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [webglError, setWebglError] = useState(false);
+  const [legendCollapsed, setLegendCollapsed] = useState(false);
 
   // Initialize MapLibre GL map with OpenFreeMap Dark vector style
   useEffect(() => {
@@ -603,75 +604,89 @@ export default function JaipurMapLibre({
       <div ref={mapContainer} className="w-full h-full" />
 
       {/* Professional Cartographic Legend (Matching Hackathon GIS Standards) */}
-      <div className="absolute top-14 left-3 z-10 bg-slate-950/90 backdrop-blur-md border border-slate-800 p-2 rounded-lg shadow-lg text-[10px] font-sans text-slate-200 select-none space-y-1.5 max-w-[190px]">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-1.5 border-b border-slate-800 text-[10px] font-mono uppercase font-bold text-slate-400">
-          <span>JAIPUR GIS OPERATIONAL LAYERS</span>
-          <span className="text-sky-400">WGS84</span>
-        </div>
-
-        {/* Synthetic population gradient; not WorldPop or census data. */}
-        {layerVisibility.populationHeatmap && (
-          <div className="space-y-1">
-            <div className="text-[10px] text-slate-300 font-semibold flex justify-between">
-              <span>Synthetic population surface</span>
-              <span className="font-mono text-[9px] text-slate-400">Radial model</span>
-            </div>
-            <div className="h-2 w-full rounded-sm bg-gradient-to-r from-slate-900 via-teal-600 to-amber-300 border border-slate-700/60" />
-            <div className="flex justify-between text-[8px] font-mono text-slate-400">
-              <span>Low</span>
-              <span>Moderate</span>
-              <span>Extreme</span>
-            </div>
+      <div className={`absolute top-14 left-3 z-10 bg-slate-950/90 backdrop-blur-md border border-slate-800 rounded-lg shadow-lg text-[10px] font-sans text-slate-200 select-none transition-all duration-200 ${legendCollapsed ? 'p-1.5 max-w-[160px]' : 'p-2 space-y-1.5 max-w-[190px]'}`}>
+        {/* Header / Collapse Toggle */}
+        <button
+          type="button"
+          onClick={() => setLegendCollapsed(!legendCollapsed)}
+          className="w-full flex items-center justify-between text-left pb-1 border-b border-slate-800 text-[10px] font-mono uppercase font-bold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer group"
+          title={legendCollapsed ? "Expand legend" : "Collapse legend"}
+        >
+          <div className="flex items-center space-x-1 truncate">
+            <span className="truncate">JAIPUR GIS LAYERS</span>
+            <span className="text-[9px] text-slate-500 group-hover:text-slate-300">
+              {legendCollapsed ? '▼' : '▲'}
+            </span>
           </div>
-        )}
+          <span className="text-sky-400 text-[9px] ml-1 shrink-0">WGS84</span>
+        </button>
 
-        {/* Incident Severity Dots (Image 3 Style) */}
-        <div className="space-y-1 pt-1 border-t border-slate-800/80">
-          <div className="text-[10px] text-slate-300 font-semibold">Incident SCADA Severity</div>
-          <div className="grid grid-cols-3 gap-1 text-[9px] font-mono">
-            <div className="flex items-center space-x-1">
-              <span className="w-2 h-2 rounded-full bg-red-500 shadow-xs" />
-              <span>&ge;85 High</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <span className="w-2 h-2 rounded-full bg-amber-500 shadow-xs" />
-              <span>75-84 Med</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <span className="w-2 h-2 rounded-full bg-sky-400 shadow-xs" />
-              <span>&lt;75 Mod</span>
-            </div>
-          </div>
-        </div>
+        {!legendCollapsed && (
+          <>
+            {/* Synthetic population gradient; not WorldPop or census data. */}
+            {layerVisibility.populationHeatmap && (
+              <div className="space-y-1">
+                <div className="text-[10px] text-slate-300 font-semibold flex justify-between">
+                  <span>Synthetic population surface</span>
+                  <span className="font-mono text-[9px] text-slate-400">Radial model</span>
+                </div>
+                <div className="h-2 w-full rounded-sm bg-gradient-to-r from-slate-900 via-teal-600 to-amber-300 border border-slate-700/60" />
+                <div className="flex justify-between text-[8px] font-mono text-slate-400">
+                  <span>Low</span>
+                  <span>Moderate</span>
+                  <span>Extreme</span>
+                </div>
+              </div>
+            )}
 
-        {/* Critical Infrastructure Markers (Image 2 Style) */}
-        {(layerVisibility.hospitals || layerVisibility.fireStations || layerVisibility.schools) && (
-          <div className="space-y-1 pt-1 border-t border-slate-800/80">
-            <div className="text-[10px] text-slate-300 font-semibold">Reference facilities · unverified coordinates</div>
-            <div className="flex items-center space-x-3 text-[9px]">
-              <div className="flex items-center space-x-1">
-                <span className="w-2 h-2 rounded-full bg-pink-500" />
-                <span>Hospital</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <span className="w-2 h-2 rounded-full bg-orange-500" />
-                <span>Fire</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <span className="w-2 h-2 rounded-full bg-yellow-400" />
-                <span>School</span>
+            {/* Incident Severity Dots (Image 3 Style) */}
+            <div className="space-y-1 pt-1 border-t border-slate-800/80">
+              <div className="text-[10px] text-slate-300 font-semibold">Incident SCADA Severity</div>
+              <div className="grid grid-cols-3 gap-1 text-[9px] font-mono">
+                <div className="flex items-center space-x-1">
+                  <span className="w-2 h-2 rounded-full bg-red-500 shadow-xs" />
+                  <span>&ge;85 High</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 shadow-xs" />
+                  <span>75-84 Med</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <span className="w-2 h-2 rounded-full bg-sky-400 shadow-xs" />
+                  <span>&lt;75 Mod</span>
+                </div>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Impact Radius Buffer (Image 4 Style) */}
-        {layerVisibility.impactRadius && (
-          <div className="flex items-center space-x-1.5 pt-1 border-t border-slate-800/80 text-[9px] text-purple-300 font-mono">
-            <span className="w-2.5 h-2.5 rounded-full border border-purple-400 bg-purple-500/30" />
-            <span>Impact Disruption Radius</span>
-          </div>
+            {/* Critical Infrastructure Markers (Image 2 Style) */}
+            {(layerVisibility.hospitals || layerVisibility.fireStations || layerVisibility.schools) && (
+              <div className="space-y-1 pt-1 border-t border-slate-800/80">
+                <div className="text-[10px] text-slate-300 font-semibold">Reference facilities · unverified coordinates</div>
+                <div className="flex items-center space-x-3 text-[9px]">
+                  <div className="flex items-center space-x-1">
+                    <span className="w-2 h-2 rounded-full bg-pink-500" />
+                    <span>Hospital</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <span className="w-2 h-2 rounded-full bg-orange-500" />
+                    <span>Fire</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <span className="w-2 h-2 rounded-full bg-yellow-400" />
+                    <span>School</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Impact Radius Buffer (Image 4 Style) */}
+            {layerVisibility.impactRadius && (
+              <div className="flex items-center space-x-1.5 pt-1 border-t border-slate-800/80 text-[9px] text-purple-300 font-mono">
+                <span className="w-2.5 h-2.5 rounded-full border border-purple-400 bg-purple-500/30" />
+                <span>Impact Disruption Radius</span>
+              </div>
+            )}
+          </>
         )}
       </div>
       <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 rounded bg-slate-950/85 border border-slate-700 px-3 py-1 text-[10px] font-mono text-slate-300 pointer-events-none">JAIPUR · approximate boundary · WGS84</div>
