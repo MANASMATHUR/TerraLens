@@ -422,13 +422,6 @@ export default function TaskPage() {
 
   const handleToggleIncident = (id: number) => {
     if (timeExpired || result) return;
-    // Auto-start task if user interacts before clicking begin task
-    if (!taskStarted) {
-      setTaskStarted(true);
-      if (!taskStartedAt) {
-        setTaskStartedAt(new Date().toISOString());
-      }
-    }
     setFocusedId(id);
     setSelectedIds((prev) => {
       if (prev.includes(id)) {
@@ -446,7 +439,7 @@ export default function TaskPage() {
   };
 
   const handleBeginTask = async () => {
-    if (taskStarted || tutorialSeconds > 0 || !participantId) return;
+    if (taskStarted || !participantId) return;
     try {
       const response = await fetch('/api/sessions', {
         method: 'POST',
@@ -483,6 +476,11 @@ export default function TaskPage() {
 
   const handleSubmit = async () => {
     if (selectedIds.length !== 3 || isSubmitting || timeExpired) return;
+
+    // If user somehow picked 3 without clicking Begin Task, ensure session exists first
+    if (!taskStartedAt) {
+      await handleBeginTask();
+    }
 
     setIsSubmitting(true);
     try {
