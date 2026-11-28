@@ -216,7 +216,7 @@ export default function TaskPage() {
   const [taskStarted, setTaskStarted] = useState(false);
   const [taskStartedAt, setTaskStartedAt] = useState<string | null>(null);
   const [modelConfigSignature, setModelConfigSignature] = useState<string | null>(null);
-  const [tutorialSeconds, setTutorialSeconds] = useState(20);
+  const [tutorialSeconds, setTutorialSeconds] = useState(0);
   const [degradedReason, setDegradedReason] = useState<string | null>(null);
   const [timeExpired, setTimeExpired] = useState<boolean>(false);
   const [secondsRemaining, setSecondsRemaining] = useState<number>(120);
@@ -421,7 +421,13 @@ export default function TaskPage() {
   const timeFormatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
   const handleToggleIncident = (id: number) => {
-    if (!taskStarted || timeExpired || result) return;
+    if (timeExpired || result) return;
+
+    // Start the clock on the first pick if not already started
+    if (!taskStarted) {
+      void handleBeginTask();
+    }
+
     setFocusedId(id);
     setSelectedIds((prev) => {
       if (prev.includes(id)) {
@@ -439,7 +445,7 @@ export default function TaskPage() {
   };
 
   const handleBeginTask = async () => {
-    if (taskStarted || tutorialSeconds > 0 || !participantId) return;
+    if (taskStarted || !participantId) return;
     try {
       const response = await fetch('/api/sessions', {
         method: 'POST',
@@ -593,17 +599,25 @@ export default function TaskPage() {
         <button
           type="button"
           onClick={() => {
-            if (selectedIds.length === 3) setIsConfirmOpen(true);
+            if (selectedIds.length === 3 && !result) setIsConfirmOpen(true);
           }}
-          disabled={selectedIds.length !== 3 || isSubmitting || timeExpired}
+          disabled={selectedIds.length !== 3 || isSubmitting || timeExpired || Boolean(result)}
           className={`py-1.5 px-4 rounded-[var(--radius-sm)] text-[12px] font-bold transition-all ${
-            selectedIds.length === 3 && !timeExpired && !isSubmitting
+            result
+              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 cursor-default'
+              : selectedIds.length === 3 && !timeExpired && !isSubmitting
               ? 'bg-[var(--accent)] text-white hover:opacity-90 cursor-pointer shadow-xs'
               : 'bg-[var(--surface-raised)] text-[var(--text-low)] border border-[var(--border-hairline)] cursor-not-allowed'
           }`}
-          title={selectedIds.length !== 3 ? 'Pick 3 to submit' : 'Submit selected incident priorities'}
+          title={
+            result
+              ? 'Triage submitted'
+              : selectedIds.length !== 3
+              ? 'Pick 3 to submit'
+              : 'Submit selected incident priorities'
+          }
         >
-          {selectedIds.length !== 3 ? 'Pick 3 to submit' : 'Submit triage'}
+          {result ? 'Submitted' : selectedIds.length !== 3 ? 'Pick 3 to submit' : 'Submit triage'}
         </button>
       </div>
 
@@ -760,7 +774,12 @@ export default function TaskPage() {
 
       {/* Submission Results Modal */}
       {result && (
-        <div className="fixed inset-0 bg-[rgba(15,23,42,0.45)] z-50 flex items-center justify-center p-4">
+        <div
+          ref={(node) => {
+            if (node) node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }}
+          className="fixed inset-0 bg-[rgba(15,23,42,0.45)] z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+        >
           <div className="max-w-md w-full bg-white border border-slate-300 rounded p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div>
