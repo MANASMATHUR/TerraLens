@@ -304,7 +304,7 @@ export default function JaipurMapLibre({
           id: 'incidents-top3-rank',
           type: 'symbol',
           source: 'incidents-src',
-          filter: ['<=', ['get', 'display_rank'], 3],
+          filter: ['all', ['has', 'display_rank'], ['<=', ['to-number', ['get', 'display_rank']], 3]] as any,
           layout: {
             'text-field': ['to-string', ['get', 'display_rank']],
             'text-size': 10,

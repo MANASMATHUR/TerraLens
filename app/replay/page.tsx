@@ -56,7 +56,7 @@ export default function DecisionReplayPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] text-slate-600 flex items-center justify-center font-sans text-sm">
+      <div className="min-h-screen bg-[var(--bg)] text-[var(--text-mid)] flex items-center justify-center font-sans text-sm">
         Loading Decision Replay comparison...
       </div>
     );
@@ -77,7 +77,7 @@ export default function DecisionReplayPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-hi)] flex flex-col">
       <Header />
 
       <main className="max-w-7xl w-full mx-auto px-6 py-8 space-y-8 flex-1">
@@ -98,7 +98,7 @@ export default function DecisionReplayPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/task"
-              className="px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded hover:bg-slate-800 transition-colors"
+              className="px-4 py-2 bg-[var(--accent)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity"
             >
               Open Operator Workspace
             </Link>
@@ -174,10 +174,10 @@ export default function DecisionReplayPage() {
                   <button
                     key={f}
                     onClick={() => setFilterType(f)}
-                    className={`px-2.5 py-1 rounded border text-xs font-medium capitalize cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-[var(--radius-sm)] border text-xs font-medium capitalize cursor-pointer ${
                       filterType === f
-                        ? 'bg-slate-900 text-white border-slate-900'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                        : 'bg-[var(--surface)] text-[var(--text-mid)] border-[var(--border-hairline)] hover:bg-[var(--surface-raised)]'
                     }`}
                   >
                     {f}

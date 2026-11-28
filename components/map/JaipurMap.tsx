@@ -266,34 +266,34 @@ export default function JaipurMap({
   }, [activeFocusedId, incidents]);
 
   return (
-    <div className="w-full h-full relative bg-slate-900 overflow-hidden select-none">
+    <div className="w-full h-full relative bg-[var(--surface-raised)] overflow-hidden select-none">
       <div ref={mapContainer} className="w-full h-full z-0" />
 
-      {/* Cartographic Legend (Docked bottom-left, clean enterprise dark theme) */}
-      <div className="absolute bottom-4 left-4 px-3.5 py-3 rounded-lg border border-slate-700 bg-slate-900/90 backdrop-blur-md text-[11px] font-sans text-slate-200 space-y-2 shadow-xl z-10 pointer-events-none max-w-[220px]">
-        <div className="text-[10px] uppercase font-mono font-bold tracking-wider text-sky-400 border-b border-slate-800 pb-1 flex justify-between">
+      {/* Cartographic Legend (Docked bottom-left, light theme design tokens) */}
+      <div className="absolute bottom-4 left-4 px-3.5 py-3 rounded-[var(--radius-sm)] border border-[var(--border-hairline)] bg-[var(--surface)] text-[11px] font-sans text-[var(--text-mid)] space-y-2 shadow-[var(--shadow-floating)] z-10 pointer-events-none max-w-[220px]">
+        <div className="text-[10px] uppercase font-mono font-bold tracking-wider text-[var(--accent)] border-b border-[var(--border-hairline)] pb-1 flex justify-between">
           <span>JAIPUR GIS LAYERS</span>
           <span>WGS84</span>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="w-2.5 h-2.5 rounded bg-[#0284C7] border border-white shadow-xs"></span>
-          <span className="font-semibold text-white">Selected Dispatch (3)</span>
+          <span className="w-2.5 h-2.5 rounded bg-[var(--accent)] border border-white shadow-xs"></span>
+          <span className="font-semibold text-[var(--text-hi)]">Selected Dispatch (3)</span>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="w-2.5 h-2.5 rounded bg-[#DC2626] border border-white shadow-xs"></span>
+          <span className="w-2.5 h-2.5 rounded bg-[var(--bad)] border border-white shadow-xs"></span>
           <span>Active Incident</span>
         </div>
         <div className="flex items-center space-x-3 text-[10px]">
           <div className="flex items-center space-x-1">
-            <span className="w-2 h-2 rounded-full bg-[#EC4899]"></span>
+            <span className="w-2 h-2 rounded-full bg-pink-500"></span>
             <span>Hospital</span>
           </div>
           <div className="flex items-center space-x-1">
-            <span className="w-2 h-2 rounded-full bg-[#F97316]"></span>
+            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
             <span>Fire</span>
           </div>
         </div>
-        <div className="text-[9px] font-mono text-slate-400 pt-1 border-t border-slate-800">
+        <div className="text-[9px] font-mono text-[var(--text-low)] pt-1 border-t border-[var(--border-hairline)]">
           Heatmap: Population Density Grid
         </div>
       </div>
