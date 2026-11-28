@@ -421,7 +421,7 @@ export default function TaskPage() {
   const timeFormatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
   const handleToggleIncident = (id: number) => {
-    if (timeExpired || result) return;
+    if (!taskStarted || timeExpired || result) return;
     setFocusedId(id);
     setSelectedIds((prev) => {
       if (prev.includes(id)) {
@@ -439,7 +439,7 @@ export default function TaskPage() {
   };
 
   const handleBeginTask = async () => {
-    if (taskStarted || !participantId) return;
+    if (taskStarted || tutorialSeconds > 0 || !participantId) return;
     try {
       const response = await fetch('/api/sessions', {
         method: 'POST',
@@ -476,11 +476,6 @@ export default function TaskPage() {
 
   const handleSubmit = async () => {
     if (selectedIds.length !== 3 || isSubmitting || timeExpired) return;
-
-    // If user somehow picked 3 without clicking Begin Task, ensure session exists first
-    if (!taskStartedAt) {
-      await handleBeginTask();
-    }
 
     setIsSubmitting(true);
     try {
@@ -701,7 +696,12 @@ export default function TaskPage() {
               <button
                 type="button"
                 onClick={handleBeginTask}
-                className="py-2 px-5 rounded-[var(--radius-sm)] text-[13px] font-bold transition-all cursor-pointer bg-[var(--accent)] text-white hover:opacity-90 shadow-xs"
+                disabled={tutorialSeconds > 0}
+                className={`py-2 px-5 rounded-[var(--radius-sm)] text-[13px] font-bold transition-all ${
+                  tutorialSeconds > 0
+                    ? 'bg-[var(--surface-raised)] text-[var(--text-mid)] border border-[var(--border-hairline)] cursor-not-allowed opacity-60'
+                    : 'bg-[var(--accent)] text-white hover:opacity-90 cursor-pointer shadow-xs'
+                }`}
               >
                 {tutorialSeconds > 0 ? `Start Task (0:${tutorialSeconds.toString().padStart(2, '0')})` : 'Start Task'}
               </button>
