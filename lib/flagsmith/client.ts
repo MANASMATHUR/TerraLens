@@ -70,14 +70,12 @@ export async function initFlagsmith(participantId: string, sessionConfig?: Exper
 
     // If the experiment has ended or flag has no active experiment (e.g. rolled out variant post-experiment):
     // Enter post-experiment mode: serve the shipped strategy without counting as an experiment exposure.
-    const isPostExperimentRollout =
+    const validVariant = rawValue === 'severity_only' || rawValue === 'spatial_impact';
+    const noActiveExperiment =
       experimentFlag != null &&
-      (!experimentFlag.experiment || experimentFlag.experiment.inExperiment === false);
+      (experimentFlag.experiment == null || experimentFlag.experiment?.inExperiment === false);
 
-    if (
-      (rawValue === 'severity_only' || rawValue === 'spatial_impact') &&
-      isPostExperimentRollout
-    ) {
+    if (validVariant && noActiveExperiment) {
       const variant: ExperimentVariant = rawValue;
       let configValue: unknown = sessionConfig ?? null;
       if (!sessionConfig) try {
