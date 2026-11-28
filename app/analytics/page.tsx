@@ -98,6 +98,8 @@ function armLabel(key: string, experiment: ExperimentSnapshot | null | undefined
 function formatChance(value: number | undefined): string {
   if (typeof value !== 'number' || !Number.isFinite(value)) return 'not reported';
   const percent = value >= 0 && value <= 1 ? value * 100 : value;
+  if (percent > 99.9 && percent < 100) return `${percent.toFixed(2)}%`;
+  if (percent >= 99.995 && percent < 100) return '>99.99%';
   return `${percent.toFixed(1)}%`;
 }
 

@@ -7,7 +7,7 @@
 
 > **Pitch:** Spatial decision intelligence for emergency municipal operations—Flagsmith controls the incident prioritization algorithm, remote scoring weights, and telemetry pipeline.  
 > **Demo Walkthrough Video:** [Coming Soon / Final Recording]  
-> **Live Deployment:** [https://terra-lens.vercel.app](https://terra-lens.vercel.app)  
+> **Live Deployment:** [https://terra-lens-alpha.vercel.app](https://terra-lens-alpha.vercel.app)  
 
 ---
 

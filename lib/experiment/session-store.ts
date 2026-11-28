@@ -20,15 +20,24 @@ export interface LocalSession {
   flagsmith_exposure_recorded?: boolean;
 }
 
-const DATA_DIR = path.join(process.cwd(), '.data');
+const DATA_DIR = process.env.VERCEL
+  ? path.join('/tmp', '.data')
+  : path.join(process.cwd(), '.data');
 const DB_PATH = path.join(DATA_DIR, 'terralens_local.db');
 
 let dbInstance: DatabaseSync | null = null;
 
 function getDb(): DatabaseSync {
   if (dbInstance) return dbInstance;
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+  } catch (err) {
+    console.warn('[SessionStore] Could not create DATA_DIR, attempting /tmp fallback:', err);
+    const tmpData = path.join('/tmp', '.data');
+    if (!fs.existsSync(tmpData)) fs.mkdirSync(tmpData, { recursive: true });
+    return new DatabaseSync(path.join(tmpData, 'terralens_local.db'));
   }
 
   const db = new DatabaseSync(DB_PATH);
