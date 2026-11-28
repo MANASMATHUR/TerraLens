@@ -136,14 +136,14 @@ export default function IncidentCard({
             </div>
           </div>
 
-          {allowSpatial && onInspectWhy && (
+          {onInspectWhy && (
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onInspectWhy(incident);
               }}
-              title="Inspect context breakdown"
+              title="Inspect incident breakdown"
               className="mt-1 text-[11px] font-sans font-medium text-[var(--accent)] hover:underline inline-flex items-center space-x-0.5 cursor-pointer"
             >
               <span>Why?</span>

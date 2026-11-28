@@ -648,8 +648,9 @@ export default function TaskPage() {
             onToggleIncident={handleToggleIncident}
             onHoverIncident={handleHoverIncident}
             onInspectWhy={(inc) => {
+              setWhyModalIncident(inc);
+              setIsWhyModalOpen(true);
               setFocusedId(inc.id);
-              setIsDetailPanelOpen(true);
             }}
             layerVisibility={layerVisibility}
             onToggleLayer={handleToggleLayer}
