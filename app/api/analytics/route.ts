@@ -115,8 +115,6 @@ export async function GET() {
           }
         ],
         statistics: {
-          p_value: 0.0001,
-          significant: chanceWin > 0.95,
           chance_to_win: {
             control: 1 - chanceWin,
             Variant_1: chanceWin,

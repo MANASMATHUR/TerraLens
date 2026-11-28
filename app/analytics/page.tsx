@@ -14,14 +14,18 @@ type ExperimentResults = {
   feature: string;
   variants: ResultVariant[];
   statistics: {
-    p_value: number;
-    significant: boolean;
+    p_value?: number;
+    significant?: boolean;
     chance_to_win: Record<string, number>;
     lift: string;
     winner: string | null;
     recommendation: string;
     sample_size_warning: string | null;
   };
+  raw_metrics?: Array<{
+    metric_id?: number;
+    inference?: Record<string, { lift?: number; ci_low?: number; ci_high?: number; chance_to_win?: number } | null>;
+  }>;
 };
 
 type ExposureSnapshot = {
@@ -117,7 +121,11 @@ function buildVerdict(result: ExperimentResults, experiment: ExperimentSnapshot 
 
   const chanceValue = result.statistics?.chance_to_win?.[treatment.variant];
   const chance = typeof chanceValue === 'number' ? (chanceValue > 1 ? chanceValue / 100 : chanceValue) : null;
-  const intervalExcludesZero = flagsmithIntervalExcludesZero(result.statistics.lift);
+  const numericInf = result.raw_metrics?.[0]?.inference?.[treatment.variant];
+  const intervalExcludesZero =
+    typeof numericInf?.ci_low === 'number' && typeof numericInf?.ci_high === 'number'
+      ? numericInf.ci_low > 0 || numericInf.ci_high < 0
+      : flagsmithIntervalExcludesZero(result.statistics.lift);
   const control = result.variants.find((variant) => variant.variant === 'control');
   const nText = `Flagsmith evaluations: severity_only=${control?.evaluations ?? 'not reported'}, spatial_impact=${treatment.evaluations}`;
 
@@ -191,7 +199,7 @@ export default function AnalyticsPage() {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[760px] text-left text-sm">
-                <thead><tr className="border-b text-slate-500"><th className="py-2">Flagsmith variant</th><th>Evaluations</th><th>Conversions</th><th>conversion_rate</th><th>Chance to beat control</th></tr></thead>
+                <thead><tr className="border-b text-slate-500"><th className="py-2">Flagsmith variant</th><th>Evaluations</th><th>Sum</th><th>Mean value</th><th>Chance to beat control</th></tr></thead>
                 <tbody>{result.variants.map((variant) => <tr key={variant.variant} className="border-b last:border-0">
                   <td className="py-3 font-medium">{armLabel(variant.variant, snapshot?.experiment)}</td>
                   <td>{variant.evaluations}</td><td>{variant.conversions}</td><td>{variant.conversion_rate}</td>
