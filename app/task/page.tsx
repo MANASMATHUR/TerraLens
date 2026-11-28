@@ -418,7 +418,14 @@ export default function TaskPage() {
   const timeFormatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
   const handleToggleIncident = (id: number) => {
-    if (!taskStarted || timeExpired || result) return;
+    if (timeExpired || result) return;
+    // Auto-start task if user interacts before clicking begin task
+    if (!taskStarted) {
+      setTaskStarted(true);
+      if (!taskStartedAt) {
+        setTaskStartedAt(new Date().toISOString());
+      }
+    }
     setFocusedId(id);
     setSelectedIds((prev) => {
       if (prev.includes(id)) {
@@ -684,14 +691,9 @@ export default function TaskPage() {
               <button
                 type="button"
                 onClick={handleBeginTask}
-                disabled={tutorialSeconds > 0}
-                className={`py-2 px-5 rounded-[var(--radius-sm)] text-[13px] font-bold transition-all cursor-pointer ${
-                  tutorialSeconds > 0
-                    ? 'bg-[var(--surface-raised)] text-[var(--text-mid)] border border-[var(--border-hairline)] cursor-not-allowed'
-                    : 'bg-[var(--accent)] text-white hover:opacity-90 shadow-xs'
-                }`}
+                className="py-2 px-5 rounded-[var(--radius-sm)] text-[13px] font-bold transition-all cursor-pointer bg-[var(--accent)] text-white hover:opacity-90 shadow-xs"
               >
-                {tutorialSeconds > 0 ? `Start in 0:${tutorialSeconds.toString().padStart(2, '0')}` : 'Begin Task'}
+                {tutorialSeconds > 0 ? `Start Task (0:${tutorialSeconds.toString().padStart(2, '0')})` : 'Start Task'}
               </button>
             </div>
           </section>
