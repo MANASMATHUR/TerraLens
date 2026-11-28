@@ -18,6 +18,7 @@ const JaipurMapLibre = dynamic(() => import('@/components/map/JaipurMapLibre'), 
 });
 import {
   getOrCreateParticipantId,
+  resetParticipantId,
   setCachedVariant,
 } from '@/lib/experiment/identity';
 import flagsmith from '@flagsmith/flagsmith';
@@ -827,18 +828,35 @@ export default function TaskPage() {
             </div>
 
             <div className="pt-2 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  resetParticipantId();
+                  // Clean all previous run keys
+                  Object.keys(localStorage).forEach((k) => {
+                    if (k.startsWith('terralens_')) localStorage.removeItem(k);
+                  });
+                  window.location.reload();
+                }}
+                className="py-2.5 px-3 rounded-lg bg-[var(--accent)] hover:opacity-90 text-white text-xs font-bold text-center shadow-xs transition-colors flex items-center justify-center space-x-1 cursor-pointer"
+              >
+                <span>🔄</span>
+                <span>Run New Task</span>
+              </button>
               <a
                 href="/replay"
-                className="py-2.5 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold text-center shadow-xs transition-colors flex items-center justify-center space-x-1"
+                className="py-2.5 px-3 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold text-center shadow-2xs transition-colors flex items-center justify-center space-x-1"
               >
                 <span>▶</span>
                 <span>Decision Replay</span>
               </a>
+            </div>
+            <div className="pt-1 text-center">
               <a
                 href="/analytics"
-                className="py-2.5 px-3 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold text-center shadow-2xs transition-colors"
+                className="text-[11px] font-mono text-[var(--accent)] hover:underline"
               >
-                Telemetry →
+                View Experiment Telemetry →
               </a>
             </div>
           </div>

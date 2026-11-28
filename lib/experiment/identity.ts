@@ -33,6 +33,17 @@ export function getOrCreateParticipantId(): string | null {
   }
 }
 
+export function resetParticipantId(): string {
+  if (typeof window === 'undefined') return '';
+  const rawUuid = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+  const id = `demo_${rawUuid}`;
+  localStorage.setItem(PARTICIPANT_KEY, id);
+  document.cookie = `${PARTICIPANT_KEY}=${encodeURIComponent(id)}; Max-Age=${COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
+  return id;
+}
+
 export function setCachedVariant(variant: string): void {
   if (typeof window !== 'undefined') {
     localStorage.setItem(VARIANT_KEY, variant);
