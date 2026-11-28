@@ -1,0 +1,152 @@
+[
+  {
+    "incident_id": 3,
+    "reference_impact_score": 80.722,
+    "reference_rank": 1,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 10,
+    "reference_impact_score": 80.454,
+    "reference_rank": 2,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 2,
+    "reference_impact_score": 80.362,
+    "reference_rank": 3,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 7,
+    "reference_impact_score": 79.364,
+    "reference_rank": 4,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 1,
+    "reference_impact_score": 78.65,
+    "reference_rank": 5,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 15,
+    "reference_impact_score": 77.918,
+    "reference_rank": 6,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 5,
+    "reference_impact_score": 77.892,
+    "reference_rank": 7,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 4,
+    "reference_impact_score": 77.238,
+    "reference_rank": 8,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 13,
+    "reference_impact_score": 77.122,
+    "reference_rank": 9,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 16,
+    "reference_impact_score": 76.542,
+    "reference_rank": 10,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 6,
+    "reference_impact_score": 75.094,
+    "reference_rank": 11,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 11,
+    "reference_impact_score": 74.754,
+    "reference_rank": 12,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 21,
+    "reference_impact_score": 74.238,
+    "reference_rank": 13,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 18,
+    "reference_impact_score": 73.516,
+    "reference_rank": 14,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 19,
+    "reference_impact_score": 73.434,
+    "reference_rank": 15,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 22,
+    "reference_impact_score": 72.558,
+    "reference_rank": 16,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 23,
+    "reference_impact_score": 72.462,
+    "reference_rank": 17,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 14,
+    "reference_impact_score": 67.958,
+    "reference_rank": 18,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 17,
+    "reference_impact_score": 65.15,
+    "reference_rank": 19,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 20,
+    "reference_impact_score": 65.116,
+    "reference_rank": 20,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 8,
+    "reference_impact_score": 64.932,
+    "reference_rank": 21,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 12,
+    "reference_impact_score": 62.526,
+    "reference_rank": 22,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 9,
+    "reference_impact_score": 62.244,
+    "reference_rank": 23,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 24,
+    "reference_impact_score": 56.568,
+    "reference_rank": 24,
+    "benchmark_version": "v2.0"
+  },
+  {
+    "incident_id": 25,
+    "reference_impact_score": 51.178,
+    "reference_rank": 25,
+    "benchmark_version": "v2.0"
+  }
+]

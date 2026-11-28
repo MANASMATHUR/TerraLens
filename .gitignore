@@ -22,7 +22,7 @@ build/
 *.db-shm
 
 # Benchmark ground-truth (server-only — must never be public)
-data/
+# data/
 
 # Debug logs
 npm-debug.log*
