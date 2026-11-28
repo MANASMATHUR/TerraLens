@@ -7,9 +7,10 @@ interface HeaderProps {
   variant?: string;
   participantId?: string;
   storageMode?: 'supabase' | 'local_sqlite';
+  isCompleted?: boolean;
 }
 
-export default function Header({ variant, participantId, storageMode = 'local_sqlite' }: HeaderProps) {
+export default function Header({ variant, participantId, storageMode = 'local_sqlite', isCompleted = false }: HeaderProps) {
   const isSpatial = variant === 'spatial_impact';
 
   return (
@@ -28,6 +29,11 @@ export default function Header({ variant, participantId, storageMode = 'local_sq
             Console
           </span>
         </Link>
+        {isCompleted && (
+          <span className="text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-[var(--radius-sm)] bg-emerald-50 text-emerald-800 border border-emerald-200">
+            ✓ Task Complete
+          </span>
+        )}
       </div>
 
       {/* Right: Navigation & Arm Indicator */}

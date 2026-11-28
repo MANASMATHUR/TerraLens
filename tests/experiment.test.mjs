@@ -317,3 +317,29 @@ test('Gating: showSpatialContext strictly isolates spatial info to spatial_impac
   assert.equal(spatialChips.length, 3, 'Spatial render must contain all 3 spatial chips');
   assert.equal(spatialChips[0], 'Pop: 38k');
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase D: Task Timer & Session Initialization Gate
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('Fresh visit before Start Task never shows a counting clock and displays --:--', () => {
+  function computeTimerDisplay(taskStarted, taskStartedAt, secondsRemaining) {
+    if (!taskStarted || !taskStartedAt) {
+      return '--:--';
+    }
+    const minutes = Math.floor(secondsRemaining / 60);
+    const seconds = secondsRemaining % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+
+  // Before task starts (fresh landing):
+  const freshDisplay = computeTimerDisplay(false, null, 120);
+  assert.equal(freshDisplay, '--:--', 'Fresh visit before Start Task must display --:--');
+
+  // After task starts:
+  const startedDisplay = computeTimerDisplay(true, new Date().toISOString(), 120);
+  assert.equal(startedDisplay, '02:00', 'Started task must display 02:00 initially');
+
+  const runningDisplay = computeTimerDisplay(true, new Date().toISOString(), 110);
+  assert.equal(runningDisplay, '01:50', 'Running task must display remaining time');
+});

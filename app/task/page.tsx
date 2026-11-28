@@ -217,7 +217,6 @@ export default function TaskPage() {
   const [taskStarted, setTaskStarted] = useState(false);
   const [taskStartedAt, setTaskStartedAt] = useState<string | null>(null);
   const [modelConfigSignature, setModelConfigSignature] = useState<string | null>(null);
-  const [tutorialSeconds, setTutorialSeconds] = useState(0);
   const [degradedReason, setDegradedReason] = useState<string | null>(null);
   const [timeExpired, setTimeExpired] = useState<boolean>(false);
   const [secondsRemaining, setSecondsRemaining] = useState<number>(120);
@@ -384,13 +383,6 @@ export default function TaskPage() {
 
   const isInteractiveState = controlState === 'experiment_active' || controlState === 'experiment_ended';
 
-  // Tutorial time is separate from the task timer.
-  useEffect(() => {
-    if (!isInteractiveState || isLoading || taskStarted || tutorialSeconds <= 0) return;
-    const timer = setInterval(() => setTutorialSeconds((value) => Math.max(0, value - 1)), 1000);
-    return () => clearInterval(timer);
-  }, [tutorialSeconds, isInteractiveState, taskStarted, isLoading]);
-
   useEffect(() => {
     if (!taskStarted || !taskStartedAt || !isInteractiveState) return;
     const update = () => {
@@ -419,14 +411,63 @@ export default function TaskPage() {
 
   const minutes = Math.floor(secondsRemaining / 60);
   const seconds = secondsRemaining % 60;
-  const timeFormatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  const timeFormatted = taskStarted && taskStartedAt
+    ? `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+    : '--:--';
 
-  const handleToggleIncident = (id: number) => {
+  const beginTaskPromiseRef = React.useRef<Promise<void> | null>(null);
+
+  const handleBeginTask = async (): Promise<void> => {
+    if (taskStarted || !participantId) return;
+    if (beginTaskPromiseRef.current) return beginTaskPromiseRef.current;
+
+    const run = (async () => {
+      try {
+        const response = await fetch('/api/sessions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            participant_id: participantId,
+            variant,
+            assignment_source: controlState === 'experiment_ended' ? 'post_experiment' : 'flagsmith_remote',
+            flagsmith_exposure_recorded: controlState === 'experiment_active' && !degradedReason,
+            model_config: remoteConfig,
+          }),
+        });
+        if (!response.ok) {
+          const body = await response.json();
+          throw new Error(body.error || `Session request failed (${response.status})`);
+        }
+        const session = await response.json();
+        if (session.completed_at) {
+          setResult(session.result ?? null);
+          throw new Error('This participant has already used the single attempt.');
+        }
+        setStorageMode(session?.storage_backend === 'supabase' ? 'supabase' : 'local_sqlite');
+        if (session.model_config) setRemoteConfig(session.model_config as ExperimentRemoteConfig);
+        setModelConfigSignature(session.model_config_signature || null);
+        const startedAt = session.started_at || new Date().toISOString();
+        setTaskStartedAt(startedAt);
+        setTaskStarted(true);
+        setTimeExpired(false);
+        setSecondsRemaining(Math.max(0, 120 - Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000)));
+      } catch (error) {
+        alert(error instanceof Error ? error.message : 'Could not start the task.');
+      } finally {
+        beginTaskPromiseRef.current = null;
+      }
+    })();
+
+    beginTaskPromiseRef.current = run;
+    return run;
+  };
+
+  const handleToggleIncident = async (id: number) => {
     if (timeExpired || result) return;
 
-    // Start the clock on the first pick if not already started
+    // Start the clock on the first pick if not already started, awaiting the in-flight session creation
     if (!taskStarted) {
-      void handleBeginTask();
+      await handleBeginTask();
     }
 
     setFocusedId(id);
@@ -443,42 +484,6 @@ export default function TaskPage() {
 
   const handleHoverIncident = (id: number | null) => {
     setFocusedId(id);
-  };
-
-  const handleBeginTask = async () => {
-    if (taskStarted || !participantId) return;
-    try {
-      const response = await fetch('/api/sessions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          participant_id: participantId,
-          variant,
-          assignment_source: controlState === 'experiment_ended' ? 'post_experiment' : 'flagsmith_remote',
-          flagsmith_exposure_recorded: controlState === 'experiment_active' && !degradedReason,
-          model_config: remoteConfig,
-        }),
-      });
-      if (!response.ok) {
-        const body = await response.json();
-        throw new Error(body.error || `Session request failed (${response.status})`);
-      }
-      const session = await response.json();
-      if (session.completed_at) {
-        setResult(session.result ?? null);
-        throw new Error('This participant has already used the single attempt.');
-      }
-      setStorageMode(session?.storage_backend === 'supabase' ? 'supabase' : 'local_sqlite');
-      if (session.model_config) setRemoteConfig(session.model_config as ExperimentRemoteConfig);
-      setModelConfigSignature(session.model_config_signature || null);
-      const startedAt = session.started_at || new Date().toISOString();
-      setTaskStartedAt(startedAt);
-      setTaskStarted(true);
-      setTimeExpired(false);
-      setSecondsRemaining(Math.max(0, 120 - Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000)));
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Could not start the task.');
-    }
   };
 
   const handleSubmit = async () => {
@@ -561,7 +566,12 @@ export default function TaskPage() {
   return (
     <div className="h-dvh min-h-[560px] w-screen bg-[var(--bg)] flex flex-col overflow-hidden font-sans text-[var(--text-hi)]">
       {/* Top Application Bar */}
-      <Header variant={variant} participantId={participantId} storageMode={storageMode} />
+      <Header
+        variant={variant}
+        participantId={participantId}
+        storageMode={storageMode}
+        isCompleted={Boolean(result)}
+      />
 
       {/* Post-experiment notice banner (Spec item 2) */}
       {controlState === 'experiment_ended' && (
@@ -712,14 +722,9 @@ export default function TaskPage() {
               <button
                 type="button"
                 onClick={handleBeginTask}
-                disabled={tutorialSeconds > 0}
-                className={`py-2 px-5 rounded-[var(--radius-sm)] text-[13px] font-bold transition-all ${
-                  tutorialSeconds > 0
-                    ? 'bg-[var(--surface-raised)] text-[var(--text-mid)] border border-[var(--border-hairline)] cursor-not-allowed opacity-60'
-                    : 'bg-[var(--accent)] text-white hover:opacity-90 cursor-pointer shadow-xs'
-                }`}
+                className="py-2 px-5 rounded-[var(--radius-sm)] text-[13px] font-bold transition-all cursor-pointer bg-[var(--accent)] text-white hover:opacity-90 shadow-xs"
               >
-                {tutorialSeconds > 0 ? `Start Task (0:${tutorialSeconds.toString().padStart(2, '0')})` : 'Start Task'}
+                Start Task
               </button>
             </div>
           </section>
@@ -800,6 +805,12 @@ export default function TaskPage() {
                 }`}
               >
                 {result.matches} / 3 Benchmark Matches
+              </span>
+            </div>
+
+            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-center">
+              <span className="text-xs font-semibold text-slate-800">
+                Score: {result.matches} of 3 benchmark targets prioritized (Precision@3: {(result.precision_at_3 * 100).toFixed(0)}%) in {result.duration_seconds}s
               </span>
             </div>
 
