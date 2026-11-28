@@ -110,6 +110,19 @@ export default function JaipurMapLibre({
       'bottom-right'
     );
 
+    map.on('styleimagemissing', (e) => {
+      // Provide a transparent fallback image for any missing style sprite icons (e.g. OpenFreeMap wood-pattern)
+      const id = e.id;
+      if (!map.hasImage(id)) {
+        const emptyImage = {
+          width: 1,
+          height: 1,
+          data: new Uint8Array([0, 0, 0, 0]),
+        };
+        map.addImage(id, emptyImage);
+      }
+    });
+
     map.on('load', async () => {
       // 1. Add Jaipur Municipal Boundary Source & Layer
       try {

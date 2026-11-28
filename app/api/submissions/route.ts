@@ -268,8 +268,11 @@ export async function POST(req: Request) {
     };
 
     return NextResponse.json(responsePayload);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in POST /api/submissions:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({
+      error: error?.message || 'Internal server error',
+      details: process.env.NODE_ENV !== 'production' ? error?.stack : undefined
+    }, { status: 500 });
   }
 }
