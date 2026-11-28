@@ -223,8 +223,8 @@ Local runs store task sessions in SQLite at `.data/terralens_local.db`. On Verce
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. Open the SQL Editor and run the two migration files in order:
-   - `supabase/migrations/20261125000000_create_experiment_sessions.sql`
-   - `supabase/migrations/20261125000001_create_event_outbox.sql`
+   - `supabase/migrations/001_initial_schema.sql`
+   - `supabase/migrations/002_add_simulated_sessions.sql`
 3. Optional: execute `supabase/seed.sql` to load synthetic GIS points.
 4. Copy `Project URL`, `anon public key`, and `service_role secret key` from Settings → API into:
    - `NEXT_PUBLIC_SUPABASE_URL`
