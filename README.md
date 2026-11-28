@@ -144,6 +144,29 @@ flowchart TD
   T --> G["Metric 583 task_duration_seconds<br/>guardrail, uninformative for the scripted cohort"]
 ```
 
+### Scoring Engine Formula
+
+```mermaid
+flowchart LR
+  S["Severity Score<br/>engineering urgency"] --> M["Mix Factor = 0.45<br/>from Flagsmith remote config"]
+  P["Population Index<br/>weight 0.60, capped at 38k"] --> C["Consequence Score C"]
+  F["Facility Index<br/>weight 0.30, hospitals & fire"] --> C
+  A["Accessibility Index<br/>weight 0.10, road distance"] --> C
+  C --> M
+  M --> R["Final Spatial Priority Score"]
+```
+
+### Persistence & Fallback Flow
+
+```mermaid
+flowchart TD
+  Req["POST /api/sessions or /api/submissions"] --> Check{"Supabase configured?"}
+  Check -->|"Yes (Vercel / Production)"| SB[("Supabase Postgres<br/>experiment_sessions & event_outbox")]
+  Check -->|"No (Local Dev)"| SQL[("Local SQLite<br/>.data/terralens_local.db")]
+  SB --> FS["Flagsmith trackEvent()<br/>server-side telemetry"]
+  SQL --> FS
+```
+
 ---
 
 ## Setup: Local Development
@@ -330,13 +353,3 @@ The `/replay` route is a post-hoc explanatory view comparing how all 25 syntheti
 ## License
 
 Open-source under the [MIT License](LICENSE).
-
----
-
-## Demo Script Summary
-
-For recording the 3-minute walkthrough video:
-1. **Introduction (0:00–0:40):** Show problem of severity-only queues during urban disasters. Mention 11,604 vs 114,000 people protected (*disclose: capped at 38,000 per incident*).
-2. **Flagsmith Governance (0:40–1:30):** Open Flagsmith dashboard showing multivariate flag `incident_prioritization_strategy`, remote config weights, and Experiment 581 setup.
-3. **Operator Workspace (1:30–2:15):** Complete a live triage session at `/task` under remote assignment; show server-side verification rejecting client overrides.
-4. **Bayesian Results & Rollout (2:15–3:00):** Open `/analytics` showing live Bayesian verdict (+45.8% lift, 99.995% chance to be best). Reference [docs/ship-the-winner.md](docs/ship-the-winner.md) for 100% rollout.
