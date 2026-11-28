@@ -10,9 +10,9 @@ import RightTriageSidebar from '@/components/ranking/RightTriageSidebar';
 const JaipurMapLibre = dynamic(() => import('@/components/map/JaipurMapLibre'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full bg-[#0F172A] flex flex-col items-center justify-center font-sans text-xs text-sky-400 space-y-2">
-      <div className="w-5 h-5 rounded-full border-2 border-sky-400 border-t-transparent animate-spin" />
-      <span>Initializing OpenFreeMap Vector Basemap (Jaipur WGS84)...</span>
+    <div className="w-full h-full bg-[var(--surface-raised)] flex flex-col items-center justify-center font-sans text-xs text-[var(--accent)] space-y-2">
+      <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+      <span className="text-[var(--text-mid)] font-medium">Initializing Jaipur Operational Map (WGS84)...</span>
     </div>
   ),
 });
@@ -32,11 +32,11 @@ import { showSpatialContext } from '@/lib/experiment/gate';
 
 function ConnectingScreen() {
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
+    <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center font-sans">
       <div className="max-w-sm w-full text-center space-y-4 p-8">
-        <div className="w-6 h-6 rounded-full border-2 border-sky-600 border-t-transparent animate-spin mx-auto" />
-        <p className="text-sm font-semibold text-slate-700">Connecting to Flagsmith</p>
-        <p className="text-xs text-slate-500">Verifying experiment assignment…</p>
+        <div className="w-6 h-6 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin mx-auto" />
+        <p className="text-sm font-semibold text-[var(--text-hi)]">Connecting to Flagsmith</p>
+        <p className="text-xs text-[var(--text-mid)]">Verifying experiment assignment…</p>
       </div>
     </div>
   );
@@ -44,33 +44,33 @@ function ConnectingScreen() {
 
 function ExperimentUnavailableScreen({ participantId }: { participantId: string }) {
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans p-6">
-      <div className="max-w-md w-full bg-white border border-amber-200 rounded-lg p-6 space-y-4 shadow-sm">
+    <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center font-sans p-6">
+      <div className="max-w-md w-full bg-[var(--surface)] border border-[var(--border-hairline)] rounded-[var(--radius-md)] p-6 space-y-4 shadow-[var(--shadow-floating)]">
         <div className="flex items-start space-x-3">
-          <div className="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-600">
+          <div className="w-5 h-5 mt-0.5 flex-shrink-0 text-[var(--warn)]">
             <svg viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd"/>
             </svg>
           </div>
           <div>
-            <h2 className="text-sm font-bold text-slate-900">Experiment Service Unavailable</h2>
-            <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+            <h2 className="text-sm font-bold text-[var(--text-hi)]">Experiment Service Unavailable</h2>
+            <p className="text-xs text-[var(--text-mid)] mt-1 leading-relaxed">
               TerraLens could not reach the Flagsmith experimentation platform. Without a verified remote
               assignment, experiment participation is not permitted.
             </p>
           </div>
         </div>
-        <div className="bg-slate-50 border border-slate-200 rounded p-3 text-xs font-mono text-slate-700 space-y-1">
-          <div><span className="text-slate-400">state:</span> experiment_unavailable</div>
-          <div><span className="text-slate-400">participant:</span> {participantId.slice(0, 16)}…</div>
-          <div><span className="text-slate-400">source:</span> flagsmith.com</div>
+        <div className="bg-[var(--surface-raised)] border border-[var(--border-hairline)] rounded-[var(--radius-sm)] p-3 text-xs font-mono text-[var(--text-hi)] space-y-1">
+          <div><span className="text-[var(--text-low)]">state:</span> experiment_unavailable</div>
+          <div><span className="text-[var(--text-low)]">participant:</span> {participantId.slice(0, 16)}…</div>
+          <div><span className="text-[var(--text-low)]">source:</span> flagsmith.com</div>
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-[var(--text-mid)]">
           This application requires Flagsmith to function. Please check your network connection and try again.
         </p>
         <button
           onClick={() => window.location.reload()}
-          className="w-full py-2 px-4 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded transition-colors"
+          className="w-full py-2 px-4 bg-[var(--surface-raised)] hover:bg-[var(--border-hairline)] border border-[var(--border-hairline)] text-[var(--text-hi)] text-xs font-semibold rounded-[var(--radius-sm)] transition-colors cursor-pointer"
         >
           Retry Connection
         </button>
@@ -81,28 +81,28 @@ function ExperimentUnavailableScreen({ participantId }: { participantId: string 
 
 function InvalidConfigurationScreen({ participantId }: { participantId: string }) {
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans p-6">
-      <div className="max-w-md w-full bg-white border border-red-200 rounded-lg p-6 space-y-4 shadow-sm">
+    <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center font-sans p-6">
+      <div className="max-w-md w-full bg-[var(--surface)] border border-rose-200 rounded-[var(--radius-md)] p-6 space-y-4 shadow-[var(--shadow-floating)]">
         <div className="flex items-start space-x-3">
-          <div className="w-5 h-5 mt-0.5 flex-shrink-0 text-red-600">
+          <div className="w-5 h-5 mt-0.5 flex-shrink-0 text-[var(--bad)]">
             <svg viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd"/>
             </svg>
           </div>
           <div>
-            <h2 className="text-sm font-bold text-slate-900">Invalid Experiment Configuration</h2>
-            <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+            <h2 className="text-sm font-bold text-[var(--text-hi)]">Invalid Experiment Configuration</h2>
+            <p className="text-xs text-[var(--text-mid)] mt-1 leading-relaxed">
               Flagsmith returned a variant value that does not match a recognised experiment arm.
               The experiment configuration must be corrected before participation is permitted.
             </p>
           </div>
         </div>
-        <div className="bg-slate-50 border border-slate-200 rounded p-3 text-xs font-mono text-slate-700 space-y-1">
-          <div><span className="text-slate-400">state:</span> invalid_configuration</div>
-          <div><span className="text-slate-400">participant:</span> {participantId.slice(0, 16)}…</div>
-          <div><span className="text-slate-400">expected:</span> severity_only | spatial_impact</div>
+        <div className="bg-[var(--surface-raised)] border border-[var(--border-hairline)] rounded-[var(--radius-sm)] p-3 text-xs font-mono text-[var(--text-hi)] space-y-1">
+          <div><span className="text-[var(--text-low)]">state:</span> invalid_configuration</div>
+          <div><span className="text-[var(--text-low)]">participant:</span> {participantId.slice(0, 16)}…</div>
+          <div><span className="text-[var(--text-low)]">expected:</span> severity_only | spatial_impact</div>
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-[var(--text-mid)]">
           Contact the experiment administrator to verify the Flagsmith feature flag configuration.
         </p>
       </div>
@@ -112,29 +112,29 @@ function InvalidConfigurationScreen({ participantId }: { participantId: string }
 
 function NotEnrolledScreen({ participantId }: { participantId: string }) {
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans p-6">
-      <div className="max-w-md w-full bg-white border border-slate-200 rounded-lg p-6 space-y-4 shadow-sm">
+    <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center font-sans p-6">
+      <div className="max-w-md w-full bg-[var(--surface)] border border-[var(--border-hairline)] rounded-[var(--radius-md)] p-6 space-y-4 shadow-[var(--shadow-floating)]">
         <div className="flex items-start space-x-3">
-          <div className="w-5 h-5 mt-0.5 flex-shrink-0 text-slate-400">
+          <div className="w-5 h-5 mt-0.5 flex-shrink-0 text-[var(--text-low)]">
             <svg viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd"/>
             </svg>
           </div>
           <div>
-            <h2 className="text-sm font-bold text-slate-900">Not Enrolled in Experiment</h2>
-            <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+            <h2 className="text-sm font-bold text-[var(--text-hi)]">Not Enrolled in Experiment</h2>
+            <p className="text-xs text-[var(--text-mid)] mt-1 leading-relaxed">
               Your participant identity is outside the current experiment traffic allocation.
               Experiment participation requires a verified remote assignment from Flagsmith.
             </p>
           </div>
         </div>
-        <div className="bg-slate-50 border border-slate-200 rounded p-3 text-xs font-mono text-slate-700 space-y-1">
-          <div><span className="text-slate-400">state:</span> experiment_not_enrolled</div>
-          <div><span className="text-slate-400">participant:</span> {participantId.slice(0, 16)}…</div>
+        <div className="bg-[var(--surface-raised)] border border-[var(--border-hairline)] rounded-[var(--radius-sm)] p-3 text-xs font-mono text-[var(--text-hi)] space-y-1">
+          <div><span className="text-[var(--text-low)]">state:</span> experiment_not_enrolled</div>
+          <div><span className="text-[var(--text-low)]">participant:</span> {participantId.slice(0, 16)}…</div>
         </div>
         <a
           href="/"
-          className="block w-full py-2 px-4 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded text-center transition-colors"
+          className="block w-full py-2 px-4 bg-[var(--surface-raised)] hover:bg-[var(--border-hairline)] border border-[var(--border-hairline)] text-[var(--text-hi)] text-xs font-semibold rounded-[var(--radius-sm)] text-center transition-colors cursor-pointer"
         >
           Return to Home
         </a>
